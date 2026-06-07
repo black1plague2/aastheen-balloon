@@ -12,19 +12,17 @@ public class WSClient : MonoBehaviour
     public static WSClient Instance;
 
     [Header("Connection")]
-    public int serverPort = 8765;
+    public int  serverPort          = 8765;
+    public bool debugDirectConnect  = false;
+    public string debugIP           = "192.168.137.1";
 
     private const int discoveryPort = 8766;
 
-    private WebSocket          websocket;
-    private CancellationTokenSource cts;
-    private volatile string    pendingIP = null;
+    private WebSocket                websocket;
+    private CancellationTokenSource  cts;
+    private volatile string          pendingIP = null;
 
     private void Awake() => Instance = this;
-
-    [Header("Debug")]
-    public bool debugDirectConnect = false;
-    public string debugIP = "192.168.137.1";
 
     private void Start()
     {
@@ -47,21 +45,22 @@ public class WSClient : MonoBehaviour
         }
     }
 
-    // Runs on background thread — blocks until a broadcast arrives or cancelled
+    // ── Discovery ──────────────────────────────────────────────────────────────
+
     private void ListenForServer(CancellationToken token)
     {
         Debug.Log("[WSClient] Searching for Flutter server on port " + discoveryPort);
         try
         {
             using var udp = new UdpClient(discoveryPort);
-            udp.EnableBroadcast    = true;
-            udp.Client.ReceiveTimeout = 500; // 500ms so we can check cancellation
+            udp.EnableBroadcast       = true;
+            udp.Client.ReceiveTimeout = 500;
 
             while (!token.IsCancellationRequested)
             {
                 try
                 {
-                    var ep   = new IPEndPoint(IPAddress.Any, 0);
+                    var    ep   = new IPEndPoint(IPAddress.Any, 0);
                     byte[] data = udp.Receive(ref ep);
                     string msg  = Encoding.UTF8.GetString(data);
 
@@ -72,7 +71,7 @@ public class WSClient : MonoBehaviour
                         return;
                     }
                 }
-                catch (SocketException) { } // timeout — loop and check cancellation
+                catch (SocketException) { }
             }
         }
         catch (Exception e)
@@ -87,13 +86,15 @@ public class WSClient : MonoBehaviour
         string url = $"ws://{ip}:{serverPort}/ws/balloon";
         websocket  = new WebSocket(url);
 
-        websocket.OnOpen    += ()  => Debug.Log("[WSClient] Connected → " + url);
-        websocket.OnError   += (e) => Debug.LogError("[WSClient] Error: " + e);
-        websocket.OnClose   += (e) => Debug.Log("[WSClient] Closed: " + e);
+        websocket.OnOpen    += ()    => Debug.Log("[WSClient] Connected → " + url);
+        websocket.OnError   += (e)   => Debug.LogError("[WSClient] Error: " + e);
+        websocket.OnClose   += (e)   => Debug.Log("[WSClient] Closed: " + e);
         websocket.OnMessage += (bytes) => HandleMessage(Encoding.UTF8.GetString(bytes));
 
         await websocket.Connect();
     }
+
+    // ── Incoming messages ──────────────────────────────────────────────────────
 
     private void HandleMessage(string json)
     {
@@ -107,22 +108,21 @@ public class WSClient : MonoBehaviour
                 case "sensor":
                 {
                     var msg = JsonUtility.FromJson<SensorMessage>(json);
-                    GameManager.Instance.OnSensorData(msg.rotation, msg.speed, msg.warning);
+                    GameManager.Instance?.OnSensorData(msg.rotation, msg.speed, msg.warning);
                     break;
                 }
                 case "prescription":
                 {
+                    // Parse full extended prescription (new fields default gracefully)
                     var msg = JsonUtility.FromJson<PrescriptionMessage>(json);
-                    GameManager.Instance.OnPrescriptionReceived(
-                        msg.targetRotation, msg.holdTimeMs, msg.repCount,
-                        msg.balloonSize,    msg.spawnInterval, msg.sessionDuration);
+                    GameManager.Instance?.OnPrescriptionReceived(msg);
                     break;
                 }
                 case "command":
                 {
                     var msg = JsonUtility.FromJson<CommandMessage>(json);
                     if (msg != null && !string.IsNullOrEmpty(msg.command))
-                        GameManager.Instance.OnCommand(msg.command);
+                        GameManager.Instance?.OnCommand(msg.command);
                     break;
                 }
             }
@@ -133,34 +133,46 @@ public class WSClient : MonoBehaviour
         }
     }
 
-    public async void SendRepDone(int score, float rotationAchieved, float heldMs)
-    {
-        if (websocket == null || websocket.State != WebSocketState.Open) return;
+    // ── Outgoing messages ──────────────────────────────────────────────────────
 
+    public async void SendRepDone(int score, float rotationAchieved, float heldMs,
+        string balloonType, float reactionMs, bool wasCorrect, int currentStreak)
+    {
+        if (!IsOpen()) return;
         var msg = new RepDoneMessage
         {
             type             = "rep_done",
             score            = score,
             rotationAchieved = rotationAchieved,
-            heldMs           = heldMs
+            heldMs           = heldMs,
+            balloonType      = balloonType,
+            reactionTimeMs   = reactionMs,
+            wasCorrect       = wasCorrect,
+            currentStreak    = currentStreak
         };
         await websocket.SendText(JsonUtility.ToJson(msg));
     }
 
+    public async void SendSessionResult(SessionResultMessage msg)
+    {
+        if (!IsOpen()) return;
+        await websocket.SendText(JsonUtility.ToJson(msg));
+    }
+
+    private bool IsOpen() =>
+        websocket != null && websocket.State == WebSocketState.Open;
+
+    // ── Cleanup ────────────────────────────────────────────────────────────────
+
     private async void OnDisable()
     {
         cts?.Cancel();
-        if (websocket != null)
-        {
-            await websocket.Close();
-            websocket = null;
-        }
+        if (websocket != null) { await websocket.Close(); websocket = null; }
     }
 
     private async void OnApplicationQuit()
     {
         cts?.Cancel();
-        if (websocket != null)
-            await websocket.Close();
+        if (websocket != null) await websocket.Close();
     }
 }
