@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class GameManager : MonoBehaviour
@@ -56,6 +57,39 @@ public class GameManager : MonoBehaviour
     {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
+    }
+
+    private void Start()
+    {
+        // Verse mode: if Bootstrap has already verified a code, load settings and auto-start.
+        if (PlaylistManager.Instance != null && PlaylistManager.Instance.HasSession)
+        {
+            var s = PlaylistManager.Instance.Settings;
+            if (s != null)
+            {
+                var msg = new PrescriptionMessage
+                {
+                    targetRotation    = s.targetRotation,
+                    holdTimeMs        = s.holdTimeMs,
+                    repCount          = s.repCount,
+                    balloonSize       = s.balloonSize,
+                    balloonSizeMin    = s.balloonSizeMin,
+                    balloonSizeMax    = s.balloonSizeMax,
+                    spawnInterval     = s.spawnInterval,
+                    sessionDuration   = s.sessionDuration,
+                    gameMode          = s.gameMode,
+                    distractorCount   = s.distractorCount,
+                    sequenceLength    = s.sequenceLength,
+                    reactionTimeLimit = s.reactionTimeLimit,
+                    adaptiveDifficulty= s.adaptiveDifficulty,
+                    usnMode           = s.usnMode,
+                    cbsScore          = s.cbsScore,
+                    mptScore          = s.mptScore,
+                };
+                OnPrescriptionReceived(msg);
+            }
+            StartSession();
+        }
     }
 
     private void Update()
@@ -186,9 +220,7 @@ public class GameManager : MonoBehaviour
         DifficultyManager.Instance?.RecordResult(true);
         PopEffectController.Instance?.PlayCorrectPop(position, type);
 
-        WSClient.Instance?.SendRepDone(score, latestRotation, 0f,
-            type.ToString(), reactionMs, true,
-            StreakRewardSystem.Instance != null ? StreakRewardSystem.Instance.CurrentStreak : 0);
+        // Rep-level updates no longer sent over WS in Verse mode (session result is POSTed on end).
 
         UpdateUI();
         if (repsCompleted >= repCount) EndSession();
@@ -279,30 +311,74 @@ public class GameManager : MonoBehaviour
 
         string badgeStr = rewards != null ? string.Join(",", rewards.EarnedBadges) : "";
 
-        WSClient.Instance?.SendSessionResult(new SessionResultMessage
+        // Post results to backend if this session was started via Verse auth.
+        if (PlaylistManager.Instance != null && PlaylistManager.Instance.HasSession
+            && VerseClient.Instance != null)
         {
-            type              = "session_result",
-            totalScore        = score,
-            accuracy          = accuracy,
-            avgReactionTimeMs = avgReactionMs,
-            maxStreak         = rewards != null ? rewards.MaxStreak : 0,
-            badges            = badgeStr,
-            spatialLeft       = usn != null ? usn.LeftFraction   : 0f,
-            spatialCenter     = usn != null ? usn.CenterFraction : 0f,
-            spatialRight      = usn != null ? usn.RightFraction  : 0f,
-            sequenceAccuracy  = seqAccuracy,
-            gazeLeft          = gaze != null ? gaze.LeftGazeFraction   : 0f,
-            gazeCenter        = gaze != null ? gaze.CenterGazeFraction : 0f,
-            gazeRight         = gaze != null ? gaze.RightGazeFraction  : 0f,
-            difficultyLevel   = diff != null ? diff.CurrentLevel : 1,
-            correctPops       = correctPops,
-            incorrectPops     = incorrectPops,
-            missedBalloons    = missedBalloons,
-            cbsScore          = cbsScore,
-            mptScore          = mptScore,
-            gameMode          = currentGameMode.ToString(),
-            sessionDuration   = elapsed
-        });
+            var metrics = new BalloonGameMetrics
+            {
+                total_score          = score,
+                accuracy             = accuracy,
+                avg_reaction_time_ms = avgReactionMs,
+                max_streak           = rewards != null ? rewards.MaxStreak : 0,
+                correct_pops         = correctPops,
+                incorrect_pops       = incorrectPops,
+                missed_balloons      = missedBalloons,
+                game_mode            = currentGameMode.ToString(),
+                session_duration     = elapsed,
+                cbs_score            = cbsScore,
+                mpt_score            = mptScore,
+                difficulty_level     = diff != null ? diff.CurrentLevel : 1,
+                sequence_accuracy    = seqAccuracy,
+                spatial_left         = usn != null ? usn.LeftFraction   : 0f,
+                spatial_center       = usn != null ? usn.CenterFraction : 0f,
+                spatial_right        = usn != null ? usn.RightFraction  : 0f,
+            };
+            VerseClient.Instance.SubmitResults(
+                PlaylistManager.Instance.SessionId,
+                PlaylistManager.Instance.SessionToken,
+                metrics,
+                onDone: () =>
+                {
+                    Debug.Log("[GameManager] Results submitted.");
+                    PlaylistManager.Instance.Clear();
+                    StartCoroutine(ReturnToBootstrap(3f));
+                },
+                onError: err =>
+                {
+                    Debug.LogWarning("[GameManager] Results submit failed: " + err);
+                    PlaylistManager.Instance.Clear();
+                    StartCoroutine(ReturnToBootstrap(3f));
+                });
+        }
+        else
+        {
+            // Editor / V1 WS path — send over WebSocket as before.
+            WSClient.Instance?.SendSessionResult(new SessionResultMessage
+            {
+                type              = "session_result",
+                totalScore        = score,
+                accuracy          = accuracy,
+                avgReactionTimeMs = avgReactionMs,
+                maxStreak         = rewards != null ? rewards.MaxStreak : 0,
+                badges            = badgeStr,
+                spatialLeft       = usn != null ? usn.LeftFraction   : 0f,
+                spatialCenter     = usn != null ? usn.CenterFraction : 0f,
+                spatialRight      = usn != null ? usn.RightFraction  : 0f,
+                sequenceAccuracy  = seqAccuracy,
+                gazeLeft          = gaze != null ? gaze.LeftGazeFraction   : 0f,
+                gazeCenter        = gaze != null ? gaze.CenterGazeFraction : 0f,
+                gazeRight         = gaze != null ? gaze.RightGazeFraction  : 0f,
+                difficultyLevel   = diff != null ? diff.CurrentLevel : 1,
+                correctPops       = correctPops,
+                incorrectPops     = incorrectPops,
+                missedBalloons    = missedBalloons,
+                cbsScore          = cbsScore,
+                mptScore          = mptScore,
+                gameMode          = currentGameMode.ToString(),
+                sessionDuration   = elapsed
+            });
+        }
 
         ClinicalReportScreen.Instance?.ShowReport(new SessionReport
         {
@@ -331,6 +407,12 @@ public class GameManager : MonoBehaviour
 
         if (warningText) warningText.text = $"Done!  Score: {score}";
         Debug.Log($"[GameManager] Session ended — score:{score}  acc:{accuracy:P0}");
+    }
+
+    private IEnumerator ReturnToBootstrap(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        SceneManager.LoadScene("Bootstrap");
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────

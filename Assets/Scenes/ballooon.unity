@@ -2101,12 +2101,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31dbfefc769146b40aee3a7dd5e76701, type: 3}
   m_Name: 
   m_EditorClassIdentifier: BalloonPop.Scripts::PopEffectController
-  correctPopSound: {fileID: 0}
-  incorrectPopSound: {fileID: 0}
-  wrongSequenceSound: {fileID: 0}
-  streakBonusSound: {fileID: 0}
-  badgeEarnedSound: {fileID: 0}
-  sessionCompleteSound: {fileID: 0}
+  correctPopSound: {fileID: 8300000, guid: ee20447095f8d024f95db0c899996e05, type: 3}
+  incorrectPopSound: {fileID: 8300000, guid: 3b33f8a0f68a04642b8539bd5aec62dc, type: 3}
+  wrongSequenceSound: {fileID: 8300000, guid: cbc4ed603a2659d449aeaf89c2938ea3, type: 3}
+  streakBonusSound: {fileID: 8300000, guid: b1f02b4dbc5cc6f4292ca43bd2fd98eb, type: 3}
+  badgeEarnedSound: {fileID: 8300000, guid: deca89b59de78ec4ca8460ba7aa4c57b, type: 3}
+  sessionCompleteSound: {fileID: 8300000, guid: 0d1b66d89459f444c8285057f5c4d2db, type: 3}
 --- !u!4 &880154419
 Transform:
   m_ObjectHideFlags: 0

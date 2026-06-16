@@ -79,6 +79,7 @@ public class VerseClient : MonoBehaviour
         if (!string.IsNullOrEmpty(bearerToken))
             req.SetRequestHeader("Authorization", "Bearer " + bearerToken);
 
+        req.timeout = 40;
         Debug.Log($"[VerseClient] POST {url}");
         yield return req.SendWebRequest();
 

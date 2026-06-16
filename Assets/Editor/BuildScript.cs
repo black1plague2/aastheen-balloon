@@ -5,6 +5,13 @@ using System.IO;
 
 public static class BuildScript
 {
+    // Scene order matters: Bootstrap must be index 0, game scene index 1
+    private static readonly string[] Scenes =
+    {
+        "Assets/Scenes/Bootstrap.unity",  // index 0 — PIN keypad, Verse auth
+        "Assets/Scenes/ballooon.unity",   // index 1 — main balloon game
+    };
+
     public static void BuildAndroid()
     {
         string outPath = Path.GetFullPath("Builds/balloon.apk");
@@ -12,10 +19,10 @@ public static class BuildScript
 
         var opts = new BuildPlayerOptions
         {
-            scenes = new[] { "Assets/Scenes/ballooon.unity" },
+            scenes           = Scenes,
             locationPathName = outPath,
-            target = BuildTarget.Android,
-            options = BuildOptions.None,
+            target           = BuildTarget.Android,
+            options          = BuildOptions.None,
         };
 
         var report = BuildPipeline.BuildPlayer(opts);

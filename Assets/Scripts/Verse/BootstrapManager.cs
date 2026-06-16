@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.EventSystems;
 using TMPro;
 using UnityEngine.UI;
 
@@ -24,8 +25,48 @@ public class BootstrapManager : MonoBehaviour
 
     private void Awake()
     {
+        FixConflictingInteractionComponents();
         FixWorldSpaceCanvasCamera();
         AddControllerHelpers();
+        FixInputModuleRayTransform();
+    }
+
+    // OVRRaycaster + PointableCanvas conflict — OVRRaycaster intercepts events first.
+    // OVRInputModule + PointableCanvasModule conflict — both try to own the EventSystem.
+    private void FixConflictingInteractionComponents()
+    {
+        bool hasPointableCanvasModule = FindFirstObjectByType<UnityEngine.EventSystems.BaseInputModule>()
+            ?.GetType().FullName == "Oculus.Interaction.PointableCanvasModule";
+
+        // Strip OVRRaycaster from any canvas that already has PointableCanvas
+        foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+        {
+            var ovrRaycaster = canvas.GetComponent<OVRRaycaster>();
+            var pointableCanvas = canvas.GetComponent(
+                System.Type.GetType("Oculus.Interaction.PointableCanvas, Oculus.Interaction"));
+
+            if (ovrRaycaster != null && pointableCanvas != null)
+            {
+                // PointableCanvasModule needs a GraphicRaycaster to resolve hit position → UI element.
+                // OVRRaycaster IS a GraphicRaycaster, but conflicts with PointableCanvas.
+                // Swap: add plain GraphicRaycaster first, then remove OVRRaycaster.
+                if (canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null
+                    || canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() is OVRRaycaster)
+                {
+                    canvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                }
+                Debug.Log($"[Bootstrap] Swapped OVRRaycaster → GraphicRaycaster on '{canvas.name}'");
+                Destroy(ovrRaycaster);
+            }
+        }
+
+        // Strip OVRInputModule if PointableCanvasModule is driving the EventSystem
+        var ovrInput = FindFirstObjectByType<OVRInputModule>();
+        if (ovrInput != null && hasPointableCanvasModule)
+        {
+            Debug.Log("[Bootstrap] Removing OVRInputModule (PointableCanvasModule is active)");
+            Destroy(ovrInput);
+        }
     }
 
     // World-space canvas needs a camera; OVRCameraRig's center eye isn't tagged MainCamera.
@@ -60,8 +101,32 @@ public class BootstrapManager : MonoBehaviour
         helper.m_controller = controller;
     }
 
+    private void FixInputModuleRayTransform()
+    {
+        // Only runs if OVRInputModule survived (i.e. no PointableCanvasModule present).
+        var inputModule = FindFirstObjectByType<OVRInputModule>();
+        if (inputModule == null) return;
+
+        inputModule.joyPadClickButton = OVRInput.Button.PrimaryIndexTrigger;
+
+        if (inputModule.rayTransform != null) return;
+        foreach (var name in new[] { "RightControllerAnchor", "RightHandAnchor" })
+        {
+            var go = GameObject.Find(name);
+            if (go != null)
+            {
+                inputModule.rayTransform = go.transform;
+                Debug.Log($"[Bootstrap] OVRInputModule.rayTransform → {name}, click → IndexTrigger");
+                return;
+            }
+        }
+        Debug.LogWarning("[Bootstrap] No anchor found for OVRInputModule.rayTransform");
+    }
+
+
     private void Start()
     {
+        WireButtons();
         SetLoading(false);
         SetError("");
         if (patientLabel) patientLabel.gameObject.SetActive(false);
@@ -73,6 +138,46 @@ public class BootstrapManager : MonoBehaviour
             Debug.LogError("[Bootstrap] VerseClient not found — add it to the Bootstrap scene.");
         if (PlaylistManager.Instance == null)
             Debug.LogError("[Bootstrap] PlaylistManager not found — add it to the Bootstrap scene.");
+    }
+
+    // Buttons were created without onClick assignments — wire them all at runtime.
+    private void WireButtons()
+    {
+        for (int i = 0; i <= 9; i++)
+        {
+            string digit = i.ToString();
+            var go = GameObject.Find($"Btn_{digit}");
+            if (go == null) { Debug.LogWarning($"[Bootstrap] Btn_{digit} not found"); continue; }
+            var btn = go.GetComponent<UnityEngine.UI.Button>();
+            if (btn == null) continue;
+            btn.onClick.RemoveAllListeners();
+            btn.onClick.AddListener(() => OnDigitPressed(digit));
+        }
+
+        WireBtn("Btn_⌫", OnBackspace);     // ⌫ backspace
+        WireBtn("Btn_✓", OnSubmit);         // ✓ submit
+
+        if (submitButton != null)
+        {
+            submitButton.onClick.RemoveAllListeners();
+            submitButton.onClick.AddListener(OnSubmit);
+        }
+
+        WireBtn("Btn_Settings",        OnToggleSettings);
+        WireBtn("Btn_SaveUrl",         OnSaveServerUrl);
+        WireBtn("Btn_CancelSettings",  OnToggleSettings);
+
+        Debug.Log("[Bootstrap] All keypad buttons wired.");
+    }
+
+    private void WireBtn(string goName, UnityEngine.Events.UnityAction action)
+    {
+        var go = GameObject.Find(goName);
+        if (go == null) { Debug.LogWarning($"[Bootstrap] {goName} not found"); return; }
+        var btn = go.GetComponent<UnityEngine.UI.Button>();
+        if (btn == null) return;
+        btn.onClick.RemoveAllListeners();
+        btn.onClick.AddListener(action);
     }
 
     // ── Called by digit buttons (Button.onClick → OnDigitPressed("3")) ────────
@@ -97,6 +202,13 @@ public class BootstrapManager : MonoBehaviour
     {
         if (_busy) return;
         if (_pin.Length != 5) { SetError("Enter a 5-digit code."); return; }
+
+        if (VerseClient.Instance == null)
+        {
+            SetError("VerseClient missing — rebuild required.");
+            Debug.LogError("[Bootstrap] VerseClient.Instance is null on submit.");
+            return;
+        }
 
         _busy = true;
         SetLoading(true);

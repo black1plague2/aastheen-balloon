@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Bootstrap.unity
+    guid: eb14296c9161e5941a67b71c1211c50d
+  - enabled: 1
     path: Assets/Scenes/ballooon.unity
     guid: ce73b6ddbc313154e9eeef7b76a45e5e
   m_configObjects:
