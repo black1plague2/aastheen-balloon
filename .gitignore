@@ -42,5 +42,9 @@ args2.json
 args3.json
 ping_args.json
 
+# Unity scene recovery files
+Assets/_Recovery/
+Assets/_Recovery.meta
+
 # VS Code
 .vscode/

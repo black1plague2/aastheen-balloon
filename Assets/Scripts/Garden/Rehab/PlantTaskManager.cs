@@ -21,6 +21,10 @@ public class PlantTaskManager : MonoBehaviour
     [Header("Game Mode")]
     public GardenGameMode gameMode = GardenGameMode.Sequenced;
 
+    [Header("Intro")]
+    [Tooltip("Set false so GardenGameManager can show the intro first, then call StartSession() manually")]
+    public bool autoStartSession = true;
+
     // ── Difficulty / Session ──────────────────────────────────────────────
     [Header("Difficulty")]
     public int tasksPerSession    = 2;
@@ -80,7 +84,8 @@ public class PlantTaskManager : MonoBehaviour
 
     void Start()
     {
-        StartSession();
+        if (autoStartSession)
+            StartSession();
     }
 
     void Update()

@@ -11,6 +11,10 @@ public class GardenGameManager : MonoBehaviour
 {
     public static GardenGameManager Instance { get; private set; }
 
+    [Header("Intro")]
+    [Tooltip("Show the how-to-play intro before the first session")]
+    public bool showIntroOnStart = true;
+
     private PlantTaskManager _ptm;
     private float _startTime;
     private bool  _resultsSent;
@@ -44,8 +48,22 @@ public class GardenGameManager : MonoBehaviour
                 _ptm.instructionDisplayTime   = s.instructionDisplayTime;
             }
         }
-        // PTM.Start() fires next (order 0) and calls StartSession() with these values.
+
         _startTime = Time.time;
+
+        // If the intro UI is present and requested, show it first.
+        // PTM.autoStartSession was set false by the time PTM.Start() ran (order 0 > -90),
+        // so we call StartSession() ourselves inside the OnDone callback.
+        if (showIntroOnStart && GameIntroUI.Instance != null)
+        {
+            _ptm.autoStartSession = false;
+            GameIntroUI.Instance.Show(onDone: () =>
+            {
+                _startTime = Time.time;  // reset timer — count only gameplay time
+                _ptm.StartSession();
+            });
+        }
+        // If no intro UI is in the scene, PTM auto-starts as normal.
     }
 
     private void Update()
