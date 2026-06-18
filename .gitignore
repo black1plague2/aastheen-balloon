@@ -28,3 +28,19 @@ sha256_ui_preview.html
 .venv/
 __pycache__/
 *.pyc
+
+# Claude / MCP (contains API tokens)
+.claude/
+.mcp.json
+
+# Unity AI agent temp
+.utmp/
+
+# Temp arg files
+args.json
+args2.json
+args3.json
+ping_args.json
+
+# VS Code
+.vscode/

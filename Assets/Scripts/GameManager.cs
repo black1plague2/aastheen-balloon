@@ -340,15 +340,13 @@ public class GameManager : MonoBehaviour
                 metrics,
                 onDone: () =>
                 {
-                    Debug.Log("[GameManager] Results submitted.");
-                    PlaylistManager.Instance.Clear();
-                    StartCoroutine(ReturnToBootstrap(3f));
+                    Debug.Log("[GameManager] Balloon results submitted.");
+                    AdvancePlaylistOrReturn();
                 },
                 onError: err =>
                 {
                     Debug.LogWarning("[GameManager] Results submit failed: " + err);
-                    PlaylistManager.Instance.Clear();
-                    StartCoroutine(ReturnToBootstrap(3f));
+                    AdvancePlaylistOrReturn();
                 });
         }
         else
@@ -413,6 +411,27 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
         SceneManager.LoadScene("Bootstrap");
+    }
+
+    private void AdvancePlaylistOrReturn()
+    {
+        if (PlaylistManager.Instance != null && PlaylistManager.Instance.HasNextGame)
+        {
+            string nextScene = PlaylistManager.Instance.AdvanceToNextGame();
+            StartCoroutine(LoadNextGame(nextScene, 2f));
+        }
+        else
+        {
+            if (PlaylistManager.Instance != null) PlaylistManager.Instance.Clear();
+            StartCoroutine(ReturnToBootstrap(3f));
+        }
+    }
+
+    private IEnumerator LoadNextGame(string sceneName, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        Debug.Log($"[GameManager] Playlist advancing → {sceneName}");
+        SceneManager.LoadScene(sceneName);
     }
 
     // ── Helpers ────────────────────────────────────────────────────────────────

@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "Unity.TextMeshPro",
-        "Oculus.VR"
+        "Oculus.VR",
+        "Oculus.Interaction"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

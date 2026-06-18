@@ -31,36 +31,82 @@ public class BootstrapManager : MonoBehaviour
         FixInputModuleRayTransform();
     }
 
-    // OVRRaycaster + PointableCanvas conflict — OVRRaycaster intercepts events first.
-    // OVRInputModule + PointableCanvasModule conflict — both try to own the EventSystem.
+    // OVRComprehensiveInteractionRig provides the ray/poke interactors that drive
+    // PointableCanvasModule. Basic OVRCameraRig does NOT include these.
+    private static bool HasInteractionSdkRig() =>
+        GameObject.Find("OVRComprehensiveInteractionRig") != null ||
+        GameObject.Find("OVRInteractionRig") != null;
+
+    // Resolves input module + canvas raycaster mismatches at startup.
+    // Based on Meta's FlatUnityCanvas reference prefab (sdk.interaction v203):
+    //   - PointableCanvas + GraphicRaycaster are required together on each canvas
+    //   - Rigidbody/SphereCollider are NOT used for ray interaction (only poke needs PlaneSurface+PokeInteractable)
+    //   - PointableCanvasModule on EventSystem drives all PointableCanvases
+    //   - Fallback: if no Interaction SDK rig, use OVRInputModule + OVRRaycaster
     private void FixConflictingInteractionComponents()
     {
+        bool hasInteractionRig = HasInteractionSdkRig();
+        var pointableCanvasType = System.Type.GetType("Oculus.Interaction.PointableCanvas, Oculus.Interaction");
         bool hasPointableCanvasModule = FindFirstObjectByType<UnityEngine.EventSystems.BaseInputModule>()
             ?.GetType().FullName == "Oculus.Interaction.PointableCanvasModule";
 
-        // Strip OVRRaycaster from any canvas that already has PointableCanvas
+        if (!hasInteractionRig && hasPointableCanvasModule)
+        {
+            // OVRCameraRig-only scene: PointableCanvasModule has no interactors to drive it.
+            // Fall back to OVRInputModule which works with basic controller ray from OVRCameraRig.
+            var pcm  = FindFirstObjectByType<UnityEngine.EventSystems.BaseInputModule>();
+            var esGO = pcm.gameObject;
+            Destroy(pcm);
+            if (esGO.GetComponent<OVRInputModule>() == null)
+                esGO.AddComponent<OVRInputModule>();
+            hasPointableCanvasModule = false;
+            Debug.Log("[Bootstrap] Swapped PointableCanvasModule → OVRInputModule (no Interaction SDK rig)");
+        }
+
         foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
         {
-            var ovrRaycaster = canvas.GetComponent<OVRRaycaster>();
-            var pointableCanvas = canvas.GetComponent(
-                System.Type.GetType("Oculus.Interaction.PointableCanvas, Oculus.Interaction"));
+            var ovrRaycaster    = canvas.GetComponent<OVRRaycaster>();
+            var pointableCanvas = pointableCanvasType != null
+                ? canvas.GetComponent(pointableCanvasType) : null;
 
-            if (ovrRaycaster != null && pointableCanvas != null)
+            if (pointableCanvas != null)
             {
-                // PointableCanvasModule needs a GraphicRaycaster to resolve hit position → UI element.
-                // OVRRaycaster IS a GraphicRaycaster, but conflicts with PointableCanvas.
-                // Swap: add plain GraphicRaycaster first, then remove OVRRaycaster.
-                if (canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null
-                    || canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() is OVRRaycaster)
+                // Rigidbody+SphereCollider are incorrect for PointableCanvas interaction.
+                // Ray interaction needs no physics; poke needs PokeInteractable+PlaneSurface instead.
+                var rb = canvas.GetComponent<Rigidbody>();     if (rb  != null) Destroy(rb);
+                var sc = canvas.GetComponent<SphereCollider>(); if (sc != null) Destroy(sc);
+
+                if (!hasInteractionRig)
                 {
-                    canvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                    // No Interaction SDK rig: swap PointableCanvas → OVRRaycaster
+                    Destroy(pointableCanvas);
+                    if (canvas.GetComponent<OVRRaycaster>() == null)
+                        canvas.gameObject.AddComponent<OVRRaycaster>();
+                    Debug.Log($"[Bootstrap] Swapped PointableCanvas → OVRRaycaster on '{canvas.name}'");
                 }
-                Debug.Log($"[Bootstrap] Swapped OVRRaycaster → GraphicRaycaster on '{canvas.name}'");
-                Destroy(ovrRaycaster);
+                else
+                {
+                    // Has Interaction SDK rig: ensure GraphicRaycaster is present
+                    // (PointableCanvasModule requires it to resolve ray hit → UI element).
+                    // OVRRaycaster conflicts with PointableCanvas → replace with plain GraphicRaycaster.
+                    if (ovrRaycaster != null)
+                    {
+                        if (canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null
+                            || canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() is OVRRaycaster)
+                            canvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                        Destroy(ovrRaycaster);
+                        Debug.Log($"[Bootstrap] Swapped OVRRaycaster → GraphicRaycaster on '{canvas.name}'");
+                    }
+                    else if (canvas.GetComponent<UnityEngine.UI.GraphicRaycaster>() == null)
+                    {
+                        canvas.gameObject.AddComponent<UnityEngine.UI.GraphicRaycaster>();
+                        Debug.Log($"[Bootstrap] Added missing GraphicRaycaster to '{canvas.name}'");
+                    }
+                }
             }
         }
 
-        // Strip OVRInputModule if PointableCanvasModule is driving the EventSystem
+        // Strip OVRInputModule only if PointableCanvasModule is legitimately driving
         var ovrInput = FindFirstObjectByType<OVRInputModule>();
         if (ovrInput != null && hasPointableCanvasModule)
         {
@@ -245,16 +291,20 @@ public class BootstrapManager : MonoBehaviour
             patientLabel.gameObject.SetActive(true);
             patientLabel.text = $"Hi, {response.prescription?.patient_name ?? "Patient"}";
         }
-        if (statusText)
-            statusText.text = $"Loading {response.prescription?.game_name ?? "game"}…";
+
+        string gameLabel = response.prescription?.game_name ?? "game";
+        if (statusText) statusText.text = $"Loading {gameLabel}…";
 
         Invoke(nameof(LoadGameScene), 1.5f);
     }
 
     private void LoadGameScene()
     {
+        // For single-game prescriptions GameId is already set by PlaylistManager.Set().
+        // For multi-game, AdvanceToNextGame() was already called inside Set(), so
+        // GameId reflects the first game in the playlist.
         string sceneName = PlaylistManager.GameIdToSceneName(PlaylistManager.Instance.GameId);
-        Debug.Log($"[Bootstrap] Loading scene: {sceneName}");
+        Debug.Log($"[Bootstrap] Loading scene: {sceneName} (game_id: {PlaylistManager.Instance.GameId})");
         SceneManager.LoadScene(sceneName);
     }
 

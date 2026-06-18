@@ -35,13 +35,17 @@ public class BalloonSettings
 [Serializable]
 public class PrescriptionPublic
 {
-    public int           id;
-    public string        game_id;
-    public string        game_name;
-    public string        difficulty;
-    public BalloonSettings targets;       // typed so JsonUtility can deserialise directly
-    public bool          requires_nurse_approval;
-    public string        patient_name;
+    public int             id;
+    public string          game_id;
+    public string          game_name;
+    public string          difficulty;
+    public BalloonSettings targets;            // populated for game_id == "balloon"
+    public bool            requires_nurse_approval;
+    public string          patient_name;
+    // Populated by VerseClient two-pass parse when game_id == "garden"
+    [System.NonSerialized] public GardenSettings gardenTargets;
+    // Populated by VerseClient two-pass parse when game_id == "multi"
+    [System.NonSerialized] public MultiGameEntry[] multiGames;
 }
 
 [Serializable]
@@ -82,4 +86,132 @@ public class SessionResultsPayload
 {
     public BalloonGameMetrics game_metrics;
     public string             network_mode = "home";
+}
+
+// ── Garden settings (targets dict for game_id = "garden") ─────────────────────
+
+[Serializable]
+public class GardenSettings
+{
+    public int    tasksPerSession        = 2;
+    public string gameMode               = "sequenced"; // "sequenced" | "freeorder"
+    public bool   memoryMode             = false;
+    public bool   showOverviewFirst      = false;
+    public float  instructionDisplayTime = 4f;
+    public float  sessionDuration        = 180f;
+}
+
+// ── Garden session metrics (outbound) ─────────────────────────────────────────
+
+[Serializable]
+public class GardenGameMetrics
+{
+    public int    correct_tasks;
+    public int    mistakes;
+    public int    total_tasks;
+    public float  session_duration;
+    public int    difficulty_level;
+    public string game_mode;
+}
+
+[Serializable]
+public class GardenSessionResultsPayload
+{
+    public GardenGameMetrics game_metrics;
+    public string            network_mode = "home";
+}
+
+// ── Multi-game prescription (targets dict for game_id = "multi") ──────────────
+// All per-game settings are FLAT inside each entry (no nested "settings" object)
+// so JsonUtility can deserialise without polymorphism.
+
+[Serializable]
+public class MultiGameEntry
+{
+    public string id;     // "balloon" | "garden"
+    public string name;
+
+    // Balloon fields
+    public float  targetRotation  = 60f;
+    public float  holdTimeMs      = 1000f;
+    public int    repCount        = 10;
+    public float  sessionDuration = 120f;
+    public float  spawnInterval   = 3f;
+    public float  balloonSize     = 0.3f;
+    public string gameMode        = "standard";
+
+    // Garden fields (distinct names to avoid field clash with balloon)
+    public int    tasksPerSession        = 2;
+    public string gardenMode             = "sequenced"; // "sequenced" | "freeorder"
+    public bool   memoryMode             = false;
+    public bool   showOverviewFirst      = false;
+    public float  instructionDisplayTime = 4f;
+    public float  gardenDuration         = 180f;
+
+    public BalloonSettings ToBalloonSettings() => new BalloonSettings
+    {
+        targetRotation  = targetRotation,
+        holdTimeMs      = holdTimeMs,
+        repCount        = repCount,
+        sessionDuration = sessionDuration,
+        spawnInterval   = spawnInterval,
+        balloonSize     = balloonSize,
+        gameMode        = gameMode,
+    };
+
+    public GardenSettings ToGardenSettings() => new GardenSettings
+    {
+        tasksPerSession        = tasksPerSession,
+        gameMode               = gardenMode,
+        memoryMode             = memoryMode,
+        showOverviewFirst      = showOverviewFirst,
+        instructionDisplayTime = instructionDisplayTime,
+        sessionDuration        = gardenDuration,
+    };
+}
+
+[Serializable]
+public class MultiGameTargets
+{
+    public MultiGameEntry[] games;
+}
+
+// Two-pass types: used by VerseClient when game_id == "garden"
+[Serializable]
+public class GardenPrescriptionPublic
+{
+    public int            id;
+    public string         game_id;
+    public string         game_name;
+    public string         patient_name;
+    public GardenSettings targets;
+}
+
+[Serializable]
+public class GardenVerifyCodeResponse
+{
+    public int                    session_id;
+    public string                 session_token;
+    public string                 status;
+    public GardenPrescriptionPublic prescription;
+}
+
+// Two-pass types: used by VerseClient when game_id == "multi"
+[Serializable]
+public class MultiPrescriptionPublic
+{
+    public int             id;
+    public string          game_id;
+    public string          game_name;
+    public string          patient_name;
+    public MultiGameTargets targets;
+}
+
+[Serializable]
+public class MultiVerifyCodeResponse
+{
+    public int                    session_id;
+    public string                 session_token;
+    public string                 status;
+    public MultiPrescriptionPublic prescription;
 }

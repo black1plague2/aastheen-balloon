@@ -42,10 +42,94 @@ public class VerseClient : MonoBehaviour
         Action<VerifyCodeResponse> onSuccess,
         Action<string>             onError)
     {
-        var body = new VerifyCodeRequest { code = code };
-        StartCoroutine(Post<VerifyCodeResponse>(
-            $"{BaseUrl}/prescriptions/verify",
-            body, null, onSuccess, onError));
+        StartCoroutine(VerifyCodeCoroutine(code, onSuccess, onError));
+    }
+
+    private IEnumerator VerifyCodeCoroutine(string code,
+        Action<VerifyCodeResponse> onSuccess,
+        Action<string>             onError)
+    {
+        string json  = JsonUtility.ToJson(new VerifyCodeRequest { code = code });
+        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(json);
+        string url   = $"{BaseUrl}/prescriptions/verify";
+
+        using var req = new UnityWebRequest(url, "POST");
+        req.uploadHandler   = new UploadHandlerRaw(bytes);
+        req.downloadHandler = new DownloadHandlerBuffer();
+        req.SetRequestHeader("Content-Type", "application/json");
+        req.timeout = 40;
+
+        Debug.Log($"[VerseClient] POST {url}");
+        yield return req.SendWebRequest();
+
+        if (req.result != UnityWebRequest.Result.Success)
+        {
+            string err = string.IsNullOrEmpty(req.downloadHandler?.text) ? req.error : req.downloadHandler.text;
+            Debug.LogError($"[VerseClient] VerifyCode failed: {err}");
+            onError?.Invoke(err);
+            yield break;
+        }
+
+        string raw = req.downloadHandler.text;
+        Debug.Log($"[VerseClient] VerifyCode OK: {raw}");
+
+        try
+        {
+            // Peek at game_id before full parse.
+            var peek = JsonUtility.FromJson<VerifyCodeResponse>(raw);
+            var gameId = peek?.prescription?.game_id;
+
+            if (gameId == "garden")
+            {
+                // Two-pass: re-parse targets as GardenSettings.
+                var gr = JsonUtility.FromJson<GardenVerifyCodeResponse>(raw);
+                var response = new VerifyCodeResponse
+                {
+                    session_id    = gr.session_id,
+                    session_token = gr.session_token,
+                    status        = gr.status,
+                    prescription  = new PrescriptionPublic
+                    {
+                        id            = gr.prescription.id,
+                        game_id       = "garden",
+                        game_name     = gr.prescription.game_name,
+                        patient_name  = gr.prescription.patient_name,
+                        gardenTargets = gr.prescription.targets,
+                    }
+                };
+                onSuccess?.Invoke(response);
+            }
+            else if (gameId == "multi")
+            {
+                // Two-pass: re-parse with MultiGameTargets-aware struct.
+                var multi = JsonUtility.FromJson<MultiVerifyCodeResponse>(raw);
+                var games = multi?.prescription?.targets?.games;
+
+                var response = new VerifyCodeResponse
+                {
+                    session_id    = multi.session_id,
+                    session_token = multi.session_token,
+                    status        = multi.status,
+                    prescription  = new PrescriptionPublic
+                    {
+                        id           = multi.prescription.id,
+                        game_id      = "multi",
+                        game_name    = multi.prescription.game_name,
+                        patient_name = multi.prescription.patient_name,
+                        multiGames   = games,
+                    }
+                };
+                onSuccess?.Invoke(response);
+            }
+            else
+            {
+                onSuccess?.Invoke(peek);
+            }
+        }
+        catch (System.Exception e)
+        {
+            onError?.Invoke("Parse error: " + e.Message);
+        }
     }
 
     // ── /sessions/{id}/results ───────────────────────────────────────────────
@@ -56,7 +140,19 @@ public class VerseClient : MonoBehaviour
         Action<string>     onError)
     {
         var body = new SessionResultsPayload { game_metrics = metrics };
-        StartCoroutine(Post<SessionResultsPayload>(        // response body ignored
+        StartCoroutine(Post<SessionResultsPayload>(
+            $"{BaseUrl}/sessions/{sessionId}/results",
+            body, sessionToken,
+            _ => onDone?.Invoke(), onError));
+    }
+
+    public void SubmitGardenResults(int sessionId, string sessionToken,
+        GardenGameMetrics metrics,
+        Action            onDone,
+        Action<string>    onError)
+    {
+        var body = new GardenSessionResultsPayload { game_metrics = metrics };
+        StartCoroutine(Post<GardenSessionResultsPayload>(
             $"{BaseUrl}/sessions/{sessionId}/results",
             body, sessionToken,
             _ => onDone?.Invoke(), onError));
