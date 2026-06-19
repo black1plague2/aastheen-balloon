@@ -2,6 +2,7 @@
   "dependencies": {
     "com.ivanmurzak.unity.mcp": "0.81.0",
     "com.meta.xr.sdk.core": "203.0.0",
+    "com.meta.xr.sdk.interaction": "203.0.0",
     "com.unity.ai.assistant": "2.9.0-pre.2",
     "com.unity.ai.navigation": "2.0.12",
     "com.unity.collab-proxy": "2.12.4",
