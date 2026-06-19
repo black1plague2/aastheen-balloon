@@ -18,6 +18,7 @@ public class GardenGameManager : MonoBehaviour
     private PlantTaskManager _ptm;
     private float _startTime;
     private bool  _resultsSent;
+    private bool  _gameplayStarted;
 
     private void Awake()
     {
@@ -59,16 +60,22 @@ public class GardenGameManager : MonoBehaviour
             _ptm.autoStartSession = false;
             GameIntroUI.Instance.Show(onDone: () =>
             {
-                _startTime = Time.time;  // reset timer — count only gameplay time
+                _startTime        = Time.time;  // reset timer — count only gameplay time
+                _gameplayStarted  = true;
                 _ptm.StartSession();
             });
+        }
+        else
+        {
+            // No intro — PTM auto-starts; mark gameplay as begun immediately.
+            _gameplayStarted = true;
         }
         // If no intro UI is in the scene, PTM auto-starts as normal.
     }
 
     private void Update()
     {
-        if (_resultsSent || _ptm == null) return;
+        if (!_gameplayStarted || _resultsSent || _ptm == null) return;
         if (!_ptm.IsSessionActive() && Time.time - _startTime > 1f)
             SubmitAndAdvance();
     }

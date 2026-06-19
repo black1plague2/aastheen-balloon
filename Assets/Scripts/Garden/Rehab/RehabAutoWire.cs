@@ -47,8 +47,8 @@ public class RehabAutoWire : MonoBehaviour
             pi.audioSource   = src;
 
             // Load audio clips from Resources
-            pi.correctClip = Resources.Load<AudioClip>("correct");
-            pi.wrongClip   = Resources.Load<AudioClip>("wrong");
+            pi.correctClip = Resources.Load<AudioClip>("GardenAudio/correct");
+            pi.wrongClip   = Resources.Load<AudioClip>("GardenAudio/wrong");
 
             // PlantProximityTrigger — detects tool entering plant radius
             PlantProximityTrigger ppt = go.GetComponent<PlantProximityTrigger>();
