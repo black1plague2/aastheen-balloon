@@ -29,9 +29,11 @@ public class PrescriptionMessage
     public bool   usnMode             = false;
     public int    cbsScore            = -1;         // Catherine Bergego Scale 0-30 (-1 = not provided)
     public int    mptScore            = -1;         // Motor Perf Test 0-100 (-1 = not provided)
-    public float  balloonSizeMin      = 0f;         // 0 = derive from balloonSize
-    public float  balloonSizeMax      = 0f;
+    public float  balloonSizeMin       = 0f;         // 0 = derive from balloonSize
+    public float  balloonSizeMax       = 0f;
     public int    streakBonusThreshold = 3;
+    public bool   guidedMode           = true;       // show inactivity guide
+    public float  guideTimeoutSec      = 15f;        // seconds before guide appears
 }
 
 [Serializable]

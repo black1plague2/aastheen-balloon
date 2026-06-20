@@ -85,6 +85,8 @@ public class GameManager : MonoBehaviour
                     usnMode           = s.usnMode,
                     cbsScore          = s.cbsScore,
                     mptScore          = s.mptScore,
+                    guidedMode        = s.guidedMode,
+                    guideTimeoutSec   = s.guideTimeoutSec,
                 };
                 OnPrescriptionReceived(msg);
             }
@@ -136,7 +138,15 @@ public class GameManager : MonoBehaviour
         }
 
         adaptiveDifficultyEnabled = msg.adaptiveDifficulty;
-        Debug.Log($"[GameManager] Prescription received — mode:{currentGameMode}  reps:{repCount}");
+
+        if (InactivityGuide.Instance != null)
+        {
+            InactivityGuide.Instance.guidedModeEnabled = msg.guidedMode;
+            InactivityGuide.Instance.inactivityTimeout = msg.guideTimeoutSec > 0f
+                ? msg.guideTimeoutSec : 15f;
+        }
+
+        Debug.Log($"[GameManager] Prescription received — mode:{currentGameMode}  reps:{repCount}  guided:{msg.guidedMode}");
     }
 
     public void OnPrescriptionReceived(float tRot, float holdMs, int reps,
@@ -209,6 +219,7 @@ public class GameManager : MonoBehaviour
         correctPops++;
         repsCompleted++;
         reactionTimes.Add(reactionMs);
+        InactivityGuide.Instance?.NotifyCorrectPop();
 
         int baseScore   = BalloonData.GetBaseScore(size);
         int streakBonus = StreakRewardSystem.Instance != null
@@ -242,6 +253,7 @@ public class GameManager : MonoBehaviour
     {
         if (!sessionActive) return;
         missedBalloons++;
+        InactivityGuide.Instance?.OnTargetGone();
         StreakRewardSystem.Instance?.OnMissedBalloon();
         DifficultyManager.Instance?.RecordResult(false);
     }
@@ -255,6 +267,7 @@ public class GameManager : MonoBehaviour
         sessionTimer  = sessionDuration;
         sessionActive = true;
 
+        InactivityGuide.Instance?.OnSessionStart();
         DifficultyManager.Instance?.Initialize(adaptiveDifficultyEnabled);
         USNManager.Instance?.Initialize(usnModeEnabled || currentGameMode == GameMode.USN);
         StreakRewardSystem.Instance?.Initialize();
@@ -286,6 +299,7 @@ public class GameManager : MonoBehaviour
     {
         if (!sessionActive && repsCompleted == 0 && score == 0) return;
         sessionActive = false;
+        InactivityGuide.Instance?.OnSessionEnd();
         balloonSpawner?.StopSpawning();
         GazeTracker.Instance?.StopTracking();
         SequenceManager.Instance?.Reset();

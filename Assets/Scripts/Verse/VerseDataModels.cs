@@ -30,6 +30,8 @@ public class BalloonSettings
     public bool   usnMode            = false;
     public int    cbsScore           = -1;
     public int    mptScore           = -1;
+    public bool   guidedMode         = true;
+    public float  guideTimeoutSec    = 15f;
 }
 
 [Serializable]
@@ -99,6 +101,8 @@ public class GardenSettings
     public bool   showOverviewFirst      = false;
     public float  instructionDisplayTime = 4f;
     public float  sessionDuration        = 180f;
+    public bool   guidedMode             = true;
+    public float  guideTimeoutSec        = 15f;
 }
 
 // ── Garden session metrics (outbound) ─────────────────────────────────────────
@@ -147,6 +151,8 @@ public class MultiGameEntry
     public bool   showOverviewFirst      = false;
     public float  instructionDisplayTime = 4f;
     public float  gardenDuration         = 180f;
+    public bool   guidedMode             = true;
+    public float  guideTimeoutSec        = 15f;
 
     public BalloonSettings ToBalloonSettings() => new BalloonSettings
     {
@@ -157,6 +163,8 @@ public class MultiGameEntry
         spawnInterval   = spawnInterval,
         balloonSize     = balloonSize,
         gameMode        = gameMode,
+        guidedMode      = guidedMode,
+        guideTimeoutSec = guideTimeoutSec,
     };
 
     public GardenSettings ToGardenSettings() => new GardenSettings
@@ -167,6 +175,8 @@ public class MultiGameEntry
         showOverviewFirst      = showOverviewFirst,
         instructionDisplayTime = instructionDisplayTime,
         sessionDuration        = gardenDuration,
+        guidedMode             = guidedMode,
+        guideTimeoutSec        = guideTimeoutSec,
     };
 }
 

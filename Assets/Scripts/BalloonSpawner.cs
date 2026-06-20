@@ -88,6 +88,9 @@ public class BalloonSpawner : MonoBehaviour
             balloon.moveSpeed         = 0.3f * (DifficultyManager.Instance?.BalloonSpeedMultiplier ?? 1f);
             balloon.reactionTimeLimit = gm.reactionTimeLimit;
         }
+
+        if (isTarget)
+            InactivityGuide.Instance?.OnNewTarget(go.transform);
     }
 
     private BalloonType RandomDistractor(BalloonType excludeType)
