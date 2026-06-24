@@ -1,6 +1,4 @@
 using UnityEngine;
-using UnityEngine.XR.Hands;
-using UnityEngine.XR.Hands.Gestures;
 
 // Attach to any GameObject that has an XRHandPoseDetector.
 // Fires OnPoseHeld after the pose is held continuously for holdDuration seconds.
