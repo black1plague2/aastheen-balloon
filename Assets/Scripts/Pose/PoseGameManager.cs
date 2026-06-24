@@ -39,7 +39,7 @@ public class PoseGameManager : MonoBehaviour
     private void HandlePoseHeld(string poseName)
     {
         if (!_sessionActive) return;
-        _poseCounts[poseName] = _poseCounts.GetValueOrDefault(poseName, 0) + 1;
+        _poseCounts[poseName] = (_poseCounts.ContainsKey(poseName) ? _poseCounts[poseName] : 0) + 1;
         _totalReps++;
         Debug.Log($"[POSE] {poseName} held — total={_totalReps}");
     }
