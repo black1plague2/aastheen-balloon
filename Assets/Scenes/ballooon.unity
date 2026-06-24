@@ -985,6 +985,74 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &462254043
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 261720357944370196, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3084180953231183039, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+      propertyPath: m_Name
+      value: GhostHandGuide
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+--- !u!114 &462254044 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2809263507622430994, guid: a2667849c9bab5e4cb8844615b9f4a61, type: 3}
+  m_PrefabInstance: {fileID: 462254043}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2f000de8b9b66b04fa6b8142f04cb44e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BalloonPop.Scripts::GhostHandGuide
 --- !u!1 &489578450
 GameObject:
   m_ObjectHideFlags: 0
@@ -2577,6 +2645,7 @@ GameObject:
   - component: {fileID: 1143783392}
   - component: {fileID: 1143783391}
   - component: {fileID: 1143783394}
+  - component: {fileID: 1143783395}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -2660,6 +2729,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 91270afd0ee0d0045bfc0c3a4d9f25ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: BalloonPop.Scripts::SceneVisualSetup
+--- !u!114 &1143783395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1143783390}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71b309a591ad757488794b9d70fa28d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BalloonPop.Scripts::InactivityGuide
+  inactivityTimeout: 15
+  guidedModeEnabled: 1
+  ghostHand: {fileID: 462254044}
 --- !u!1 &1162171118
 GameObject:
   m_ObjectHideFlags: 0
@@ -2921,8 +3005,6 @@ MonoBehaviour:
   wideMotionModeHandPosesEnabled: 0
   _readOnlyFastMotionModeHandPosesEnabled: 0
   fastMotionModeHandPosesEnabled: 0
-  _readOnlyWideMotionMode2HandPosesEnabled: 0
-  wideMotionMode2HandPosesEnabled: 0
   dynamicResolutionVersion: 1
 --- !u!114 &1199114275
 MonoBehaviour:
@@ -5553,3 +5635,4 @@ SceneRoots:
   - {fileID: 253204729}
   - {fileID: 880154419}
   - {fileID: 489578455}
+  - {fileID: 462254043}
