@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aastheen Integration Guide — Convert Any VR Game</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --accent: #58a6ff;
+    --accent2: #79c0ff;
+    --green: #3fb950;
+    --yellow: #e3b341;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --orange: #ffa657;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --code-bg: #1c2128;
+    --tag-blue: #1f6feb;
+    --glow: rgba(88,166,255,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    font-size: 15px;
+  }
+
+  /* ── Header ── */
+  .hero {
+    background: linear-gradient(135deg, #0d1117 0%, #161b22 40%, #1a1f2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 60px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(88,166,255,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.3);
+    color: var(--accent);
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+    max-width: 700px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero p {
+    margin-top: 14px;
+    color: var(--text-muted);
+    max-width: 600px;
+    font-size: 15px;
+  }
+  .hero-meta {
+    margin-top: 20px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .hero-meta span { display: flex; align-items: center; gap: 5px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 20px 0;
+  }
+  .sidebar-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 20px 6px;
+  }
+  .sidebar a {
+    display: block;
+    padding: 5px 20px;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    border-left: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .sidebar a:hover { color: var(--text); border-left-color: var(--accent); background: var(--glow); }
+  .sidebar a.active { color: var(--accent); border-left-color: var(--accent); }
+  .sidebar a.sub { padding-left: 34px; font-size: 12px; }
+  .content { flex: 1; min-width: 0; padding: 40px; max-width: 900px; }
+
+  /* ── Typography ── */
+  h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2:first-child { margin-top: 0; }
+  h2 .icon { font-size: 1.2rem; }
+  h3 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 28px 0 10px;
+  }
+  h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 20px 0 8px;
+  }
+  p { color: var(--text-muted); margin-bottom: 12px; }
+  p strong { color: var(--text); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ── Code ── */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    overflow-x: auto;
+    margin: 12px 0;
+    position: relative;
+  }
+  pre .lang {
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-family: monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  code {
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    color: #e6edf3;
+  }
+  p code, li code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--orange);
+  }
+  .kw { color: #ff7b72; }
+  .ty { color: #79c0ff; }
+  .st { color: #a5d6ff; }
+  .cm { color: #8b949e; font-style: italic; }
+  .fn { color: #d2a8ff; }
+  .nu { color: #79c0ff; }
+  .at { color: #ffa657; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin: 16px 0;
+  }
+  .card.green { border-left: 3px solid var(--green); }
+  .card.blue  { border-left: 3px solid var(--accent); }
+  .card.yellow { border-left: 3px solid var(--yellow); }
+  .card.purple { border-left: 3px solid var(--purple); }
+  .card.orange { border-left: 3px solid var(--orange); }
+  .card-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .card.green  .card-title { color: var(--green); }
+  .card.blue   .card-title { color: var(--accent); }
+  .card.yellow .card-title { color: var(--yellow); }
+  .card.purple .card-title { color: var(--purple); }
+  .card.orange .card-title { color: var(--orange); }
+
+  /* ── Badges / Tags ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-green  { background: rgba(63,185,80,0.15);  color: var(--green);  border: 1px solid rgba(63,185,80,0.3);  }
+  .badge-blue   { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+  .badge-yellow { background: rgba(227,179,65,0.15); color: var(--yellow); border: 1px solid rgba(227,179,65,0.3); }
+  .badge-purple { background: rgba(188,140,255,0.15);color: var(--purple); border: 1px solid rgba(188,140,255,0.3);}
+  .badge-red    { background: rgba(248,81,73,0.15);  color: var(--red);    border: 1px solid rgba(248,81,73,0.3);  }
+
+  /* ── Steps ── */
+  .steps { counter-reset: step; }
+  .step {
+    counter-increment: step;
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    width: 32px; height: 32px;
+    flex-shrink: 0;
+    background: var(--tag-blue);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    color: white;
+  }
+  .step-num::before { content: counter(step); }
+  .step-body h3 { margin-top: 4px; font-size: 1rem; }
+
+  /* ── Table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    vertical-align: top;
+  }
+  td:first-child { color: var(--text); font-family: monospace; font-size: 12px; }
+  tr:hover td { background: var(--glow); }
+
+  /* ── Checklist ── */
+  .checklist { list-style: none; margin: 10px 0; }
+  .checklist li {
+    padding: 6px 0;
+    padding-left: 24px;
+    position: relative;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .checklist li:last-child { border-bottom: none; }
+  .checklist li::before {
+    content: '○';
+    position: absolute;
+    left: 0;
+    color: var(--border);
+  }
+  .checklist li.done { color: var(--green); }
+  .checklist li.done::before { content: '✓'; color: var(--green); }
+  .checklist li strong { color: var(--text); }
+
+  /* ── Two-col grid ── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  @media (max-width: 700px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* ── Section divider ── */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 40px 0 20px;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Changelog ── */
+  .changelog-entry {
+    display: flex;
+    gap: 16px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .changelog-date {
+    color: var(--text-muted);
+    font-family: monospace;
+    width: 90px;
+    flex-shrink: 0;
+  }
+  .changelog-content strong { color: var(--text); }
+
+  /* ── Glow pill highlight ── */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-family: monospace;
+    color: var(--text-muted);
+    margin: 2px;
+  }
+  .pill .dot { background: var(--green); }
+
+  /* ── Repo ref ── */
+  .repo-ref {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .repo-ref:hover { border-color: var(--accent); color: var(--text); }
+  .repo-ref .repo-icon { font-size: 1.1rem; }
+  .repo-ref strong { color: var(--text); font-family: monospace; }
+
+  /* ── TOC page numbers ── */
+  .toc-num { margin-left: auto; color: var(--border); font-family: monospace; font-size: 11px; }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════ HERO ════════ -->
+<div class="hero">
+  <div class="hero-badge"><span class="dot"></span> Living Document — Aastheen Dev Team</div>
+  <h1>Converting a VR Game to an<br><span>Aastheen-Compatible</span> Experience</h1>
+  <p>A complete reference for any developer who wants to plug a Unity + Meta Quest game into the Aastheen rehab platform — from WebSocket wiring to ghost-hand guided modes. Add a script, done.</p>
+  <div class="hero-meta">
+    <span><span class="dot"></span> Backend live at aastheen.onrender.com</span>
+    <span>· Platform: Meta Quest 3S</span>
+    <span>· Engine: Unity 2022+ URP</span>
+    <span>· Flutter 3.44.0</span>
+    <span>· Last updated: 2026-06-21</span>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════ LAYOUT ══════ -->
+<div class="layout">
+
+<!-- ──────── SIDEBAR ──────── -->
+<nav class="sidebar">
+  <div class="sidebar-label">Overview</div>
+  <a href="#architecture">Architecture</a>
+  <a href="#quickstart">5-Minute Quickstart</a>
+
+  <div class="sidebar-label">Core Integration</div>
+  <a href="#meta-prefabs">Meta SDK Prefabs</a>
+  <a class="sub" href="#meta-camera">Camera Rig</a>
+  <a class="sub" href="#meta-grab">Grab Interaction</a>
+  <a class="sub" href="#meta-hands">Hand Tracking</a>
+  <a href="#network">Network Layer</a>
+  <a class="sub" href="#v1-ws">V1 WebSocket</a>
+  <a class="sub" href="#v2-verse">V2 Verse Auth</a>
+  <a href="#gamemanager">GameManager Contract</a>
+  <a href="#scene-reqs">Scene Requirements</a>
+
+  <div class="sidebar-label">Guided Mode</div>
+  <a href="#ghost-guide">Ghost Hand Guide</a>
+  <a class="sub" href="#ghost-scripts">Scripts</a>
+  <a class="sub" href="#ghost-setup">Scene Setup</a>
+  <a class="sub" href="#ghost-garden">Garden Variant</a>
+
+  <div class="sidebar-label">Game Ports</div>
+  <a href="#balloon-port">Balloon Game</a>
+  <a href="#garden-port">Garden Game</a>
+
+  <div class="sidebar-label">Flutter Side</div>
+  <a href="#flutter-protocol">Protocol Reference</a>
+  <a href="#flutter-prescription">Prescription Fields</a>
+
+  <div class="sidebar-label">Build</div>
+  <a href="#build-checklist">APK Build Checklist</a>
+  <a href="#debug">Debug Checklist</a>
+
+  <div class="sidebar-label">Log</div>
+  <a href="#changelog">Changelog</a>
+</nav>
+
+<!-- ──────── MAIN CONTENT ──────── -->
+<main class="content">
+
+<!-- ═══ ARCHITECTURE ═══════════════════════════════════════════ -->
+<h2 id="architecture"><span class="icon">🏗</span> Architecture</h2>
+
+<p>Aastheen has two protocol generations. Both must coexist — <strong>V1 must keep working</strong> while V2 is being built.</p>
+
+<div class="grid2">
+  <div class="card blue">
+    <div class="card-title">V1 — Local WebSocket (running)</div>
+    <p style="font-size:13px">Flutter runs a WS server on port <code>8765</code>. Quest discovers Flutter via UDP broadcast on port <code>8766</code>. No cloud, no auth. Doctor's laptop must be on the same hotspot.</p>
+    <pre style="margin-top:8px;padding:10px;font-size:12px"><code>Flutter (WS Server :8765)
+    ↕  UDP discovery :8766
+Quest (WS Client)</code></pre>
+  </div>
+  <div class="card purple">
+    <div class="card-title">V2 — Verse Cloud Auth (in progress)</div>
+    <p style="font-size:13px">Quest enters a 5-digit prescription code → REST to <code>aastheen.onrender.com</code> → gets session JWT + prescription → auto-launches game playlist. No Flutter required at runtime.</p>
+    <pre style="margin-top:8px;padding:10px;font-size:12px"><code>Quest → POST /prescriptions/verify
+  ← session_token + BalloonSettings
+Quest → POST /sessions/{id}/results</code></pre>
+  </div>
+</div>
+
+<div class="card yellow">
+  <div class="card-title">⚠ Rule — Backward Compatibility</div>
+  <p style="font-size:13px">Every new game must work in <strong>both</strong> modes. In Start(), check <code>PlaylistManager.Instance?.HasSession</code>. If true → V2 path. If false → wait for V1 WS prescription. Never remove V1 code.</p>
+</div>
+
+<h3>Repos</h3>
+<a class="repo-ref" href="https://github.com/Nainikap/aastheen" target="_blank">
+  <span class="repo-icon">📦</span>
+  <div><strong>Nainikap/aastheen</strong> — Flutter frontend (branch: flutter-ws-server)<br><span style="font-size:11px;color:var(--text-muted)">V1 WS game sessions · V2 Verse REST auth · prescription builder</span></div>
+</a>
+<a class="repo-ref" href="https://github.com/black1plague2/aastheen-balloon" target="_blank">
+  <span class="repo-icon">🎮</span>
+  <div><strong>black1plague2/aastheen-balloon</strong> — Unity (master branch)<br><span style="font-size:11px;color:var(--text-muted)">Bootstrap + ballooon.unity + Game_Garden — all 3 scenes in one APK</span></div>
+</a>
+<a class="repo-ref" href="https://github.com/vaibhav700c/garden_rehab" target="_blank">
+  <span class="repo-icon">🌱</span>
+  <div><strong>vaibhav700c/garden_rehab</strong> — Original garden scene (branch: modify)<br><span style="font-size:11px;color:var(--text-muted)">Source of Game_Garden assets — now merged into balloon repo</span></div>
+</a>
+<a class="repo-ref" href="https://github.com/oculus-samples" target="_blank">
+  <span class="repo-icon">🥽</span>
+  <div><strong>oculus-samples</strong> — Official Meta XR SDK Unity samples<br><span style="font-size:11px;color:var(--text-muted)">Reference for OVRCameraRig, BuildingBlocks, Hand Tracking, Grab Interaction</span></div>
+</a>
+<a class="repo-ref" href="https://github.com/endel/NativeWebSocket" target="_blank">
+  <span class="repo-icon">🔌</span>
+  <div><strong>endel/NativeWebSocket</strong> — WebSocket client for Unity<br><span style="font-size:11px;color:var(--text-muted)">Used by WSClient.cs — already in repo at Assets/Scripts/WebSocket/</span></div>
+</a>
+
+<!-- ═══ QUICKSTART ════════════════════════════════════════════= -->
+<h2 id="quickstart"><span class="icon">⚡</span> 5-Minute Quickstart</h2>
+<p>Minimum steps to make any existing Unity VR game Aastheen-compatible from scratch.</p>
+
+<div class="steps">
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Copy the core scripts</h3>
+      <p>From <code>balloon/Assets/Scripts/</code>, copy these into your project:</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+        <span class="pill">WSClient.cs</span>
+        <span class="pill">WSDataModels.cs</span>
+        <span class="pill">WebSocket/WebSocket.cs</span>
+        <span class="pill">InactivityGuide.cs</span>
+        <span class="pill">GhostHandGuide.cs</span>
+        <span class="pill">Verse/VerseClient.cs</span>
+        <span class="pill">Verse/PlaylistManager.cs</span>
+        <span class="pill">Verse/VerseDataModels.cs</span>
+        <span class="pill">UnityMainThreadDispatcher.cs</span>
+      </div>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Drop the Meta SDK prefabs into your scene</h3>
+      <p>In Unity: <strong>GameObject → XR → OVR Camera Rig</strong>, or use Building Blocks panel (<em>Window → XR → Building Blocks</em>). Add: Camera Rig, Hand Tracking (L+R), Controller Tracking. These give you head/hand position for free.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Create a GameManager implementing the contract</h3>
+      <p>Add a single <code>GameManager</code> MonoBehaviour. It needs three methods — the protocol won't call anything else:</p>
+      <pre><code><span class="kw">public void</span> <span class="fn">OnPrescriptionReceived</span>(<span class="ty">PrescriptionMessage</span> msg) <span class="cm">// store settings</span>
+<span class="kw">public void</span> <span class="fn">OnCommand</span>(<span class="ty">string</span> command)              <span class="cm">// "start"|"stop"|"pause"|"reset"</span>
+<span class="kw">public void</span> <span class="fn">OnSensorData</span>(<span class="ty">float</span> rotation, <span class="ty">float</span> speed, <span class="ty">string</span> warning)</code></pre>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Add WSClient to GameManager</h3>
+      <p>Select your GameManager in the Hierarchy → <strong>Add Component → WSClient</strong>. Set <code>Server Port: 8765</code>, <code>Debug Direct Connect: false</code>. WSClient will auto-discover Flutter via UDP and route all messages to GameManager.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Add InactivityGuide + GhostHandGuide prefab</h3>
+      <p>Select GameManager → <strong>Add Component → InactivityGuide</strong>. Drag <code>GhostHandGuide.prefab</code> into the scene, then drag that instance into the <em>Ghost Hand</em> slot. Done — guide appears after 15s of inactivity automatically.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Add V2 Verse singletons to Bootstrap scene</h3>
+      <p>In the <strong>Bootstrap</strong> scene only, create empty GameObjects and attach: <code>VerseClient</code> (DontDestroyOnLoad), <code>PlaylistManager</code> (DontDestroyOnLoad), <code>UnityMainThreadDispatcher</code>. These survive scene loads and auto-wire into every game scene.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ META SDK PREFABS ════════════════════════════════════════ -->
+<h2 id="meta-prefabs"><span class="icon">🥽</span> Meta SDK Prefabs — Use These First</h2>
+<p>The Meta XR SDK ships with <strong>Building Blocks</strong> — one-click prefab systems that handle the hard parts. Never build camera rigs, hand tracking, or grab systems from scratch.</p>
+
+<div class="card blue">
+  <div class="card-title">Finding Building Blocks</div>
+  <p style="font-size:13px"><strong>Window → XR → Building Blocks</strong> in the Unity menu bar. Each block auto-installs its dependencies and sets up the correct hierarchy. You can also use <strong>GameObject → XR</strong> for quick prefab placement.</p>
+</div>
+
+<h3 id="meta-camera">🎥 Camera Rig (Required in every scene)</h3>
+<table>
+  <tr><th>What to use</th><th>Where</th><th>What it gives you</th></tr>
+  <tr><td>OVRCameraRig</td><td>Building Blocks → Camera Rig<br>OR Packages/Meta XR SDK/Prefabs/OVRCameraRig.prefab</td><td>CenterEyeAnchor, LeftHandAnchor, RightHandAnchor, TrackingSpace — head + controller positions in world space</td></tr>
+</table>
+<pre><code><span class="cm">// Access in scripts:</span>
+<span class="ty">OVRCameraRig</span> rig = <span class="fn">FindObjectOfType</span>&lt;<span class="ty">OVRCameraRig</span>&gt;();
+<span class="ty">Transform</span> head   = rig.centerEyeAnchor;
+<span class="ty">Transform</span> rHand  = rig.rightHandAnchor;
+<span class="ty">Transform</span> lHand  = rig.leftHandAnchor;</code></pre>
+
+<div class="card yellow">
+  <div class="card-title">⚠ Tracking Origin — Always Set EyeLevel</div>
+  <p style="font-size:13px">On the OVRManager component (sits on OVRCameraRig), set <code>Tracking Origin Type = Eye Level</code>. Floor-level causes the camera to appear at floor height in the headset. This must be set per-scene.</p>
+</div>
+
+<h3 id="meta-grab">🤝 Grab Interaction (for pickable objects)</h3>
+<table>
+  <tr><th>What to use</th><th>Where</th><th>Notes</th></tr>
+  <tr><td>[BuildingBlock] Grab Interaction</td><td>Building Blocks panel → Grab Interaction</td><td>Adds Grabbable, Rigidbody, PhysicsTransformable, PointableUnityEventWrapper automatically to any selected object</td></tr>
+  <tr><td>OVRGrabbable</td><td>Add Component on your object</td><td>Simpler legacy version — works with OVRGrabber on controller hands</td></tr>
+  <tr><td>Oculus.Interaction.Grabbable</td><td>Via Building Block</td><td>Used by CanGrabNotifier.cs in garden game</td></tr>
+</table>
+
+<div class="card green">
+  <div class="card-title">✓ Pattern used in Garden game — CanGrabNotifier.cs</div>
+  <p style="font-size:13px">The watering can uses <code>Oculus.Interaction.Grabbable</code> + <code>CanGrabNotifier.cs</code>. The notifier listens to <code>WhenPointerEventRaised</code> events to set <code>isGrabbed = true/false</code>. Any rehab game with a grab object should replicate this exact pattern.</p>
+  <pre><code><span class="cm">// CanGrabNotifier.cs — attach alongside Grabbable</span>
+<span class="ty">Grabbable</span> grabbable = <span class="fn">GetComponent</span>&lt;<span class="ty">Grabbable</span>&gt;();
+grabbable.<span class="at">WhenPointerEventRaised</span> += HandlePointerEvent;
+
+<span class="kw">void</span> <span class="fn">HandlePointerEvent</span>(<span class="ty">PointerEvent</span> evt) {
+    <span class="kw">if</span> (evt.Type == <span class="ty">PointerEventType</span>.Select)   isGrabbed = <span class="kw">true</span>;
+    <span class="kw">if</span> (evt.Type == <span class="ty">PointerEventType</span>.Unselect) isGrabbed = <span class="kw">false</span>;
+}</code></pre>
+</div>
+
+<h3 id="meta-hands">✋ Hand Tracking</h3>
+<table>
+  <tr><th>What to use</th><th>Where</th><th>Notes</th></tr>
+  <tr><td>[BuildingBlock] Hand Tracking</td><td>Building Blocks → Hand Tracking (adds both L+R)</td><td>Adds OVRHand + OVRSkeleton + OVRMesh. Gives you 24 bone positions per hand</td></tr>
+  <tr><td>OVRSkeleton.Bones</td><td>On the Hand Tracking GO</td><td>Used by Balloon.cs proximity detection — iterate bones, check distance to balloon</td></tr>
+  <tr><td>OVRHand.transform.rotation</td><td>On the Hand Tracking GO</td><td>Used by ForearmRotationTracker.cs to measure wrist pronation in garden game</td></tr>
+</table>
+<pre><code><span class="cm">// Finding the right OVRHand by name (pattern from ForearmRotationTracker.cs)</span>
+<span class="ty">OVRHand</span>[] hands = <span class="fn">FindObjectsByType</span>&lt;<span class="ty">OVRHand</span>&gt;(<span class="ty">FindObjectsSortMode</span>.None);
+<span class="kw">foreach</span> (<span class="ty">OVRHand</span> h <span class="kw">in</span> hands) {
+    <span class="kw">if</span> (h.name.<span class="fn">ToLower</span>().<span class="fn">Contains</span>(<span class="st">"right"</span>)) { rightHand = h; <span class="kw">break</span>; }
+}</code></pre>
+
+<div class="card orange">
+  <div class="card-title">📌 API Note — FindObjectOfType in static context</div>
+  <p style="font-size:13px">In static methods and MCP script-execute bodies, use the full form: <code>UnityEngine.Object.FindObjectOfType&lt;T&gt;()</code>. In MonoBehaviour methods, <code>FindObjectOfType&lt;T&gt;()</code> works directly. Use <code>FindObjectsByType&lt;T&gt;(FindObjectsSortMode.None)</code> for multi-result queries (new API, replaces <code>FindObjectsOfType</code>).</p>
+</div>
+
+<!-- ═══ NETWORK LAYER ══════════════════════════════════════════= -->
+<h2 id="network"><span class="icon">🌐</span> Network Layer</h2>
+
+<h3 id="v1-ws">V1 — WebSocket (Local Flutter Server)</h3>
+<p>All V1 game communication goes through a single <strong>WSClient.cs</strong> component. Copy it and add it to your GameManager — that's the entire integration.</p>
+
+<table>
+  <tr><th>File</th><th>Role</th><th>Action needed</th></tr>
+  <tr><td>WSClient.cs</td><td>UDP discovery + WS connection + message routing</td><td>Add Component to GameManager. Set serverPort=8765</td></tr>
+  <tr><td>WebSocket/WebSocket.cs</td><td>NativeWebSocket implementation (works on Android)</td><td>Copy as-is, no changes</td></tr>
+  <tr><td>WSDataModels.cs</td><td>Serializable message classes</td><td>Add your game's extra fields here. Never remove existing fields.</td></tr>
+</table>
+
+<pre><code><span class="cm">// In your GameManager — WSClient will call these methods automatically:</span>
+<span class="kw">public void</span> <span class="fn">OnPrescriptionReceived</span>(<span class="ty">PrescriptionMessage</span> msg) { ... }
+<span class="kw">public void</span> <span class="fn">OnCommand</span>(<span class="ty">string</span> command) { ... }
+<span class="kw">public void</span> <span class="fn">OnSensorData</span>(<span class="ty">float</span> rotation, <span class="ty">float</span> speed, <span class="ty">string</span> warning) { ... }
+
+<span class="cm">// To send data back to Flutter:</span>
+<span class="ty">WSClient</span>.Instance?.<span class="fn">SendSessionResult</span>(sessionResultMessage);
+<span class="ty">WSClient</span>.Instance?.<span class="fn">SendRepDone</span>(repDoneMessage);</code></pre>
+
+<div class="card blue">
+  <div class="card-title">How UDP discovery works</div>
+  <p style="font-size:13px">Flutter broadcasts <code>AASTHEEN_SERVER:8765</code> on UDP port 8766 every 2 seconds to both <code>255.255.255.255</code> and the subnet broadcast (computed from the active NIC). Quest's WSClient listens on UDP 8766, extracts the IP, then opens <code>ws://&lt;ip&gt;:8765/ws/balloon</code>. Zero hardcoded IPs in production. Change <code>/ws/balloon</code> to <code>/ws/yourGame</code> in WSClient.ConnectWebSocket().</p>
+</div>
+
+<h4>Network Requirements</h4>
+<table>
+  <tr><th>Setup</th><th>Status</th><th>Notes</th></tr>
+  <tr><td>Windows Mobile Hotspot (phone + Quest on laptop hotspot)</td><td><span class="badge badge-green">✓ Works</span></td><td>Best option — no AP isolation</td></tr>
+  <tr><td>Android phone hotspot</td><td><span class="badge badge-red">✗ Fails</span></td><td>AP isolation blocks device-to-device UDP</td></tr>
+  <tr><td>Home/office WiFi router</td><td><span class="badge badge-red">✗ Fails</span></td><td>Usually AP isolation</td></tr>
+</table>
+
+<pre><code><span class="cm"># Windows firewall rule — run once on the laptop, persists across reboots:</span>
+netsh advfirewall firewall add rule name="Quest WS" dir=in action=allow protocol=TCP localport=8765</code></pre>
+
+<h3 id="v2-verse">V2 — Verse Cloud Auth</h3>
+<p>V2 requires three singletons in the <strong>Bootstrap scene only</strong>. They persist across all scene loads via <code>DontDestroyOnLoad</code>.</p>
+
+<table>
+  <tr><th>Script</th><th>GameObject</th><th>Key behaviour</th></tr>
+  <tr><td>VerseClient.cs</td><td>VerseClient (Bootstrap)</td><td>REST calls to aastheen.onrender.com. BaseUrl loaded from PlayerPrefs, falls back to Inspector default.</td></tr>
+  <tr><td>PlaylistManager.cs</td><td>PlaylistManager (Bootstrap)</td><td>Holds session_token, session_id, Settings (BalloonSettings). GameManager.Start() reads this.</td></tr>
+  <tr><td>UnityMainThreadDispatcher.cs</td><td>UnityMainThreadDispatcher</td><td>Queues callbacks from async REST threads back to Unity main thread.</td></tr>
+</table>
+
+<pre><code><span class="cm">// In GameManager.Start() — handles both V1 and V2:</span>
+<span class="kw">if</span> (<span class="ty">PlaylistManager</span>.Instance != <span class="kw">null</span> &amp;&amp; <span class="ty">PlaylistManager</span>.Instance.HasSession) {
+    <span class="cm">// V2 path — load prescription from PlaylistManager</span>
+    <span class="ty">BalloonSettings</span> s = <span class="ty">PlaylistManager</span>.Instance.Settings;
+    <span class="fn">OnPrescriptionReceived</span>(<span class="kw">new</span> <span class="ty">PrescriptionMessage</span> { ... });
+    <span class="fn">StartSession</span>();
+}
+<span class="cm">// else: V1 path — wait for WSClient to receive prescription over WS</span></code></pre>
+
+<!-- ═══ GAMEMANAGER CONTRACT ══════════════════════════════════= -->
+<h2 id="gamemanager"><span class="icon">📋</span> GameManager Contract</h2>
+<p>Every Aastheen game scene must have exactly one <code>GameManager</code> (or equivalent) that implements this interface. WSClient and Verse both talk to it.</p>
+
+<pre><code><span class="cm">// ── Minimum GameManager interface ──────────────────────────────</span>
+<span class="kw">public class</span> <span class="ty">GameManager</span> : <span class="ty">MonoBehaviour</span> {
+    <span class="kw">public static</span> <span class="ty">GameManager</span> Instance;    <span class="cm">// singleton</span>
+
+    <span class="cm">// Called by WSClient (V1) or by Start() reading PlaylistManager (V2)</span>
+    <span class="kw">public void</span> <span class="fn">OnPrescriptionReceived</span>(<span class="ty">PrescriptionMessage</span> msg);
+
+    <span class="cm">// Called by WSClient on {"type":"command","command":"start|stop|pause|reset"}</span>
+    <span class="kw">public void</span> <span class="fn">OnCommand</span>(<span class="ty">string</span> command);
+
+    <span class="cm">// Called by WSClient on {"type":"sensor"} — EMG/IMU readings</span>
+    <span class="kw">public void</span> <span class="fn">OnSensorData</span>(<span class="ty">float</span> rotation, <span class="ty">float</span> speed, <span class="ty">string</span> warning);
+
+    <span class="cm">// Called when the game ends — POST results to backend</span>
+    <span class="kw">private void</span> <span class="fn">EndSession</span>(); <span class="cm">// internal, calls VerseClient.SubmitResults()</span>
+}</code></pre>
+
+<div class="card yellow">
+  <div class="card-title">⚠ Critical — OnPrescriptionReceived must NOT auto-start</div>
+  <p style="font-size:13px">Only store parameters in <code>OnPrescriptionReceived</code>. The session starts only when <code>OnCommand("start")</code> arrives (V1) or when <code>StartSession()</code> is called directly from Start() (V2). Mixing these causes double-starts.</p>
+</div>
+
+<!-- ═══ SCENE REQUIREMENTS ════════════════════════════════════= -->
+<h2 id="scene-reqs"><span class="icon">🎬</span> Scene Requirements</h2>
+<p>Every game scene must have these GameObjects present. Anything not listed is game-specific and optional.</p>
+
+<ul class="checklist">
+  <li class="done"><strong>OVRCameraRig</strong> — with TrackingOriginType = EyeLevel on OVRManager</li>
+  <li class="done"><strong>[BuildingBlock] Hand Tracking left + right</strong> — via Building Blocks panel</li>
+  <li class="done"><strong>[BuildingBlock] Controller Tracking</strong> (if using controllers)</li>
+  <li class="done"><strong>GameManager</strong> — implementing the 3-method contract above</li>
+  <li class="done"><strong>WSClient</strong> (component on GameManager) — serverPort=8765, debugDirectConnect=false</li>
+  <li class="done"><strong>InactivityGuide</strong> (component on GameManager) — ghostHand wired, timeout=15f</li>
+  <li class="done"><strong>GhostHandGuide</strong> (instance in scene) — dragged into InactivityGuide.ghostHand slot</li>
+  <li class="done"><strong>UnityMainThreadDispatcher</strong> — standalone GameObject, only if V2 Verse used</li>
+  <li><strong>EventSystem</strong> with OVRInputModule (required for UI button clicks in VR)</li>
+  <li><strong>Canvas with OVRRaycaster</strong> (instead of GraphicRaycaster) for any World Space UI</li>
+</ul>
+
+<div class="card orange">
+  <div class="card-title">📌 OVRRaycaster — Required for all World Space UI</div>
+  <p style="font-size:13px">Replace Unity's default <code>GraphicRaycaster</code> with <code>OVRRaycaster</code> on every World Space Canvas. Without it, OVR controller/hand rays won't hit UI elements. The Bootstrap scene was broken for weeks because of this — <code>OVRComprehensiveInteractionRig</code> + <code>GraphicRaycaster</code> were the missing pieces.</p>
+</div>
+
+<!-- ═══ GHOST HAND GUIDE ══════════════════════════════════════= -->
+<h2 id="ghost-guide"><span class="icon">👻</span> Ghost Hand Guide (Inactivity-Triggered)</h2>
+<p>After <strong>N seconds of no correct action</strong>, a semi-transparent ghost hand appears at the current target's position, pulses, and tracks the target in real-time. It disappears instantly when the player succeeds. Fully configurable from the Flutter prescription.</p>
+
+<div class="grid2">
+  <div class="card green">
+    <div class="card-title">Guided Mode ON (default)</div>
+    <p style="font-size:13px">Player doesn't pop a balloon for 15s → ghost appears at that balloon, tracks its movement toward player, pulses blue → player pops → ghost fades out immediately.</p>
+  </div>
+  <div class="card blue">
+    <div class="card-title">Guided Mode OFF</div>
+    <p style="font-size:13px">Set <code>guidedMode = false</code> in prescription (via Flutter) or on the InactivityGuide component. Guide never appears. Good for experienced patients or accuracy-testing sessions.</p>
+  </div>
+</div>
+
+<h3 id="ghost-scripts">Scripts</h3>
+
+<h4>GhostHandGuide.cs — the visual</h4>
+<pre><code><span class="cm">// Attach to your ghost prefab. Assign ghostRenderers[] in Inspector.</span>
+<span class="ty">GhostHandGuide</span> guide = GetComponent&lt;<span class="ty">GhostHandGuide</span>&gt;();
+guide.<span class="fn">SetTarget</span>(balloonTransform); <span class="cm">// tracks live Transform</span>
+guide.<span class="fn">Show</span>();   <span class="cm">// fades in, pulses alpha + scale</span>
+guide.<span class="fn">Hide</span>();   <span class="cm">// fades out, deactivates</span>
+
+<span class="cm">// Inspector fields:</span>
+<span class="at">public</span> <span class="ty">Renderer</span>[] ghostRenderers;      <span class="cm">// all renderers on the ghost</span>
+<span class="at">public</span> <span class="ty">float</span> maxAlpha        = <span class="nu">0.55f</span>; <span class="cm">// fully visible alpha</span>
+<span class="at">public</span> <span class="ty">float</span> minAlpha        = <span class="nu">0.15f</span>; <span class="cm">// pulse low point</span>
+<span class="at">public</span> <span class="ty">float</span> pulseSpeed      = <span class="nu">2f</span>;
+<span class="at">public</span> <span class="ty">float</span> floatAmplitude  = <span class="nu">0.04f</span>; <span class="cm">// gentle bob in Y</span>
+<span class="at">public</span> <span class="ty">float</span> scalePulseAmount = <span class="nu">0.08f</span>;</code></pre>
+
+<h4>InactivityGuide.cs — the timer logic</h4>
+<pre><code><span class="cm">// Attach to GameManager. Wire ghostHand in Inspector.</span>
+<span class="ty">InactivityGuide</span>.Instance?.<span class="fn">OnSessionStart</span>();      <span class="cm">// call in GameManager.StartSession()</span>
+<span class="ty">InactivityGuide</span>.Instance?.<span class="fn">OnSessionEnd</span>();        <span class="cm">// call in GameManager.EndSession()</span>
+<span class="ty">InactivityGuide</span>.Instance?.<span class="fn">NotifyCorrectPop</span>();   <span class="cm">// call on any correct action</span>
+<span class="ty">InactivityGuide</span>.Instance?.<span class="fn">OnNewTarget</span>(t);       <span class="cm">// call when new target spawns (resets timer)</span>
+<span class="ty">InactivityGuide</span>.Instance?.<span class="fn">OnTargetGone</span>();       <span class="cm">// call when target missed/despawned</span>
+
+<span class="cm">// Inspector fields:</span>
+<span class="at">public</span> <span class="ty">float</span>          inactivityTimeout = <span class="nu">15f</span>; <span class="cm">// set from prescription at runtime</span>
+<span class="at">public</span> <span class="ty">bool</span>           guidedModeEnabled = <span class="kw">true</span>;
+<span class="at">public</span> <span class="ty">GhostHandGuide</span> ghostHand;               <span class="cm">// drag scene instance here</span></code></pre>
+
+<h4>Prescription fields (auto-wired)</h4>
+<pre><code><span class="cm">// In PrescriptionMessage / BalloonSettings / GardenSettings:</span>
+<span class="at">public</span> <span class="ty">bool</span>  guidedMode      = <span class="kw">true</span>;  <span class="cm">// false = disable entirely</span>
+<span class="at">public</span> <span class="ty">float</span> guideTimeoutSec = <span class="nu">15f</span>;   <span class="cm">// 10-30 recommended for rehab</span>
+
+<span class="cm">// GameManager.OnPrescriptionReceived sets these automatically:</span>
+<span class="ty">InactivityGuide</span>.Instance.guidedModeEnabled = msg.guidedMode;
+<span class="ty">InactivityGuide</span>.Instance.inactivityTimeout  = msg.guideTimeoutSec;</code></pre>
+
+<h3 id="ghost-setup">Scene Setup — Step by Step</h3>
+<div class="steps">
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Create the ghost material</h3>
+      <p>Right-click Assets/Materials → Create → Material. Shader: <strong>Universal Render Pipeline/Lit</strong>. Set Surface Type = Transparent, Base Color = (R:50 G:150 B:255 A:115). This gives the translucent blue glow.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Build the ghost prefab</h3>
+      <p>Create an empty GameObject named <code>GhostHandGuide</code>. Add a child Sphere (scale 0.12) and optionally a second smaller Sphere (scale 0.09). Remove colliders from both. Assign the ghost material. Add <code>GhostHandGuide.cs</code> to the root. Drag both MeshRenderers into <code>ghostRenderers[]</code>.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Wire in the scene</h3>
+      <p>Drag the prefab into the scene hierarchy. Select GameManager → Add Component → <code>InactivityGuide</code>. Drag the scene instance of GhostHandGuide into the <strong>Ghost Hand</strong> slot.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num"></div>
+    <div class="step-body">
+      <h3>Call the four events from your game logic</h3>
+      <p>When a target appears → <code>OnNewTarget(target.transform)</code>. When correctly cleared → <code>NotifyCorrectPop()</code>. When target despawns missed → <code>OnTargetGone()</code>. That's it — the guide handles the rest.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card purple">
+  <div class="card-title">🔗 Reference implementations</div>
+  <a class="repo-ref" href="https://github.com/dilmerv/UnityMetaQuestTutorials" target="_blank" style="margin:4px 0">
+    <span class="repo-icon">🎯</span>
+    <div><strong>dilmerv/UnityMetaQuestTutorials</strong> — Hand pose detection, OVRSkeleton examples</div>
+  </a>
+  <a class="repo-ref" href="https://github.com/NVIDIAGameWorks/PhysX-Vehicle-Simulator" target="_blank" style="margin:4px 0">
+    <span class="repo-icon">👋</span>
+    <div><strong>oculus-samples/Unity-HandGameplay</strong> — Ghost hand / instructional overlays in XR</div>
+  </a>
+</div>
+
+<h3 id="ghost-garden">Garden Game Variant — Phase-Aware Guide</h3>
+<p>The garden game has two sequential phases per task: <strong>grab the can</strong> → <strong>tilt to water</strong>. The guide needs to know which phase is active to show the right gesture.</p>
+
+<pre><code><span class="cm">// In GardenGameManager or WaterController — call per phase:</span>
+<span class="kw">if</span> (!grabNotifier.<span class="fn">IsGrabbed</span>()) {
+    <span class="cm">// Phase 1: guide should appear near the watering can</span>
+    <span class="ty">InactivityGuide</span>.Instance?.<span class="fn">OnNewTarget</span>(wateringCanTransform);
+} <span class="kw">else if</span> (!rotationTracker.isWatering) {
+    <span class="cm">// Phase 2: guide should appear near the player's wrist</span>
+    <span class="ty">InactivityGuide</span>.Instance?.<span class="fn">OnNewTarget</span>(rightHandTransform);
+}
+
+<span class="cm">// When watering detected (correct action):</span>
+<span class="ty">InactivityGuide</span>.Instance?.<span class="fn">NotifyCorrectPop</span>();</code></pre>
+
+<div class="card yellow">
+  <div class="card-title">⏳ TODO — Garden inactivity wiring</div>
+  <p style="font-size:13px">Wire the above phase logic into <code>GardenGameManager.cs</code>. InactivityGuide is already on the GameManager in Game_Garden scene — it just needs the call sites added to the garden game loop. This was not yet done as of 2026-06-21.</p>
+</div>
+
+<!-- ═══ BALLOON PORT ══════════════════════════════════════════= -->
+<h2 id="balloon-port"><span class="icon">🎈</span> Balloon Game — Integration Notes</h2>
+
+<table>
+  <tr><th>Script</th><th>Role</th><th>Integration point</th></tr>
+  <tr><td>GameManager.cs</td><td>Session orchestration, prescription, score</td><td>Calls InactivityGuide on pop, start, end</td></tr>
+  <tr><td>BalloonSpawner.cs</td><td>Spawns target + distractor balloons per wave</td><td>Calls InactivityGuide.OnNewTarget() on each target spawn</td></tr>
+  <tr><td>Balloon.cs</td><td>Individual balloon — proximity pop detection</td><td>Pop: OVRSkeleton bone proximity OR PinTip collider</td></tr>
+  <tr><td>SequenceManager.cs</td><td>Colour sequence mode — validates pop order</td><td>Standalone singleton, GameManager routes to it</td></tr>
+  <tr><td>DifficultyManager.cs</td><td>Adaptive difficulty — rolling 5-rep window</td><td>Adjusts spawn speed, size, distractor count (levels 1–5)</td></tr>
+  <tr><td>USNManager.cs</td><td>Spatial neglect training — 60% left bias</td><td>Activated when cbsScore ≥ 10</td></tr>
+</table>
+
+<h4>Clinical modes and their activation</h4>
+<table>
+  <tr><th>Mode</th><th>Activation</th><th>Behaviour</th></tr>
+  <tr><td>Standard</td><td>default</td><td>Pop red balloons, score by speed + streak</td></tr>
+  <tr><td>Sequence</td><td>gameMode="sequence"</td><td>Remember + reproduce a colour sequence. Wrong order = -50pts + red flash</td></tr>
+  <tr><td>Reaction</td><td>gameMode="reaction"</td><td>reactionTimeLimit enforced; balloon auto-despawns if not popped in time</td></tr>
+  <tr><td>USN</td><td>gameMode="usn" OR cbsScore≥10</td><td>60% left spawn bias; "Look LEFT!" alert after 10s no left activity</td></tr>
+  <tr><td>Adaptive</td><td>adaptiveDifficulty=true</td><td>DifficultyManager adjusts level 1–5 every 5 reps based on accuracy</td></tr>
+</table>
+
+<!-- ═══ GARDEN PORT ═══════════════════════════════════════════= -->
+<h2 id="garden-port"><span class="icon">🌱</span> Garden Game — Integration Notes</h2>
+
+<table>
+  <tr><th>Script</th><th>Role</th><th>Meta prefab dependency</th></tr>
+  <tr><td>ForearmRotationTracker.cs</td><td>Detects wrist pronation (Z-roll &lt; −45°) = watering</td><td>OVRHand (from Hand Tracking Building Block)</td></tr>
+  <tr><td>CanGrabNotifier.cs</td><td>Detects watering can grab via pointer events</td><td>Oculus.Interaction.Grabbable (from Grab Interaction Building Block)</td></tr>
+  <tr><td>WaterController.cs</td><td>Plays WaterSpout / SpillEffect particles when isWatering</td><td>Requires WaterParticle.mat + SpillParticle.mat (Assets/Materials/Garden/)</td></tr>
+  <tr><td>PlantRowManager.cs</td><td>Finds closest plant to WaterSpout, triggers growth</td><td>—</td></tr>
+  <tr><td>PlantTaskManager.cs</td><td>Task sequencing, session timer, score</td><td>—</td></tr>
+  <tr><td>GardenGameManager.cs</td><td>Verse wrapper — reads PlaylistManager, posts results</td><td>—</td></tr>
+  <tr><td>RehabAutoWire.cs</td><td>Auto-finds + wires all scene references at runtime</td><td>—</td></tr>
+</table>
+
+<div class="card green">
+  <div class="card-title">✓ Water particle fix — 2026-06-20</div>
+  <p style="font-size:13px"><code>WaterSpout</code> and <code>SpillEffect</code> ParticleSystemRenderers had no material assigned — water was emitting but invisible. Fixed by creating <code>Assets/Materials/Garden/WaterParticle.mat</code> and <code>SpillParticle.mat</code> (URP Particles/Unlit, transparent blue). If you see invisible particles in any game, this is always the cause.</p>
+</div>
+
+<h4>Key scene positioning values</h4>
+<table>
+  <tr><th>Object</th><th>Position</th><th>Notes</th></tr>
+  <tr><td>OVRCameraRig</td><td>(0, 0, −1.5), Y=0</td><td>Faces +Z toward plants</td></tr>
+  <tr><td>RehabCanvas</td><td>(0, 1.6, −3.2), scale=0.002</td><td>World Space; CanvasFacePlayer rotates it to face player</td></tr>
+  <tr><td>WateringCup (interactive)</td><td>(1.58, 0.56, −3.00)</td><td>On table — DO NOT move this</td></tr>
+  <tr><td>Side2_Pots/WateringCup</td><td>Local Y=0 (inside prop)</td><td>Decoration only — keep local Y=0 or it floats up as a duplicate</td></tr>
+</table>
+
+<!-- ═══ FLUTTER PROTOCOL ══════════════════════════════════════= -->
+<h2 id="flutter-protocol"><span class="icon">📱</span> Flutter Protocol Reference</h2>
+
+<h3>Messages Flutter → Quest (V1 WS)</h3>
+<pre><code><span class="cm">// 1. Prescription (sent first, before start)</span>
+{
+  <span class="st">"type"</span>: <span class="st">"prescription"</span>,
+  <span class="st">"targetRotation"</span>: <span class="nu">60</span>, <span class="st">"holdTimeMs"</span>: <span class="nu">1000</span>, <span class="st">"repCount"</span>: <span class="nu">10</span>,
+  <span class="st">"balloonSize"</span>: <span class="nu">0.3</span>, <span class="st">"spawnInterval"</span>: <span class="nu">3</span>, <span class="st">"sessionDuration"</span>: <span class="nu">120</span>,
+  <span class="st">"gameMode"</span>: <span class="st">"standard|sequence|reaction|usn"</span>,
+  <span class="st">"distractorCount"</span>: <span class="nu">1</span>, <span class="st">"sequenceLength"</span>: <span class="nu">3</span>, <span class="st">"reactionTimeLimit"</span>: <span class="nu">-1</span>,
+  <span class="st">"adaptiveDifficulty"</span>: <span class="kw">false</span>, <span class="st">"usnMode"</span>: <span class="kw">false</span>,
+  <span class="st">"cbsScore"</span>: <span class="nu">-1</span>, <span class="st">"mptScore"</span>: <span class="nu">-1</span>,
+  <span class="st">"balloonSizeMin"</span>: <span class="nu">0.2</span>, <span class="st">"balloonSizeMax"</span>: <span class="nu">0.5</span>,
+  <span class="st">"guidedMode"</span>: <span class="kw">true</span>, <span class="st">"guideTimeoutSec"</span>: <span class="nu">15</span>
+}
+
+<span class="cm">// 2. Command (sent after prescription)</span>
+{ <span class="st">"type"</span>: <span class="st">"command"</span>, <span class="st">"command"</span>: <span class="st">"start|stop|pause|reset"</span> }</code></pre>
+
+<h3>Messages Quest → Flutter (V1 WS)</h3>
+<pre><code><span class="cm">// Per-rep result</span>
+{ <span class="st">"type"</span>: <span class="st">"rep_done"</span>, <span class="st">"score"</span>: <span class="nu">100</span>, <span class="st">"balloonType"</span>: <span class="st">"Red"</span>,
+  <span class="st">"reactionTimeMs"</span>: <span class="nu">650</span>, <span class="st">"wasCorrect"</span>: <span class="kw">true</span>, <span class="st">"currentStreak"</span>: <span class="nu">3</span> }
+
+<span class="cm">// Session end</span>
+{ <span class="st">"type"</span>: <span class="st">"session_result"</span>, <span class="st">"totalScore"</span>: <span class="nu">850</span>, <span class="st">"accuracy"</span>: <span class="nu">0.9</span>,
+  <span class="st">"avgReactionTimeMs"</span>: <span class="nu">720</span>, <span class="st">"maxStreak"</span>: <span class="nu">5</span>, <span class="st">"badges"</span>: <span class="st">"streak_master,sniper"</span>,
+  <span class="st">"spatialLeft"</span>: <span class="nu">0.45</span>, <span class="st">"spatialCenter"</span>: <span class="nu">0.3</span>, <span class="st">"spatialRight"</span>: <span class="nu">0.25</span>,
+  <span class="st">"sequenceAccuracy"</span>: <span class="nu">0.87</span>, <span class="st">"difficultyLevel"</span>: <span class="nu">3</span>,
+  <span class="st">"correctPops"</span>: <span class="nu">9</span>, <span class="st">"incorrectPops"</span>: <span class="nu">1</span>, <span class="st">"missedBalloons"</span>: <span class="nu">0</span> }</code></pre>
+
+<h3 id="flutter-prescription">V2 — Prescription Verify (REST)</h3>
+<pre><code><span class="cm">// Quest → POST /prescriptions/verify</span>
+{ <span class="st">"code"</span>: <span class="st">"12345"</span> }
+
+<span class="cm">// Response:</span>
+{
+  <span class="st">"session_id"</span>: <span class="nu">42</span>, <span class="st">"session_token"</span>: <span class="st">"eyJ..."</span>, <span class="st">"status"</span>: <span class="st">"active"</span>,
+  <span class="st">"prescription"</span>: {
+    <span class="st">"id"</span>: <span class="nu">7</span>, <span class="st">"game_id"</span>: <span class="st">"balloon"</span>, <span class="st">"patient_name"</span>: <span class="st">"Ramesh"</span>,
+    <span class="st">"targets"</span>: { <span class="cm">/* BalloonSettings fields */</span> }
+  }
+}
+
+<span class="cm">// Quest → POST /sessions/{session_id}/results (with Bearer session_token)</span>
+{
+  <span class="st">"game_metrics"</span>: { <span class="cm">/* BalloonGameMetrics */</span> },
+  <span class="st">"network_mode"</span>: <span class="st">"home"</span>
+}</code></pre>
+
+<!-- ═══ BUILD CHECKLIST ════════════════════════════════════════= -->
+<h2 id="build-checklist"><span class="icon">📦</span> APK Build Checklist</h2>
+
+<ul class="checklist">
+  <li><strong>Target: Android, API Level 29+</strong> — Quest runs Android. Set in Player Settings → Android</li>
+  <li><strong>Texture Compression: ASTC</strong> — required for Quest 3S. Use ASTC, not ETC2</li>
+  <li><strong>IL2CPP scripting backend</strong> — Mono sometimes fails on Quest. Use IL2CPP for release APKs</li>
+  <li><strong>Scenes in Build Settings</strong> — Bootstrap (index 0), ballooon (index 1), Game_Garden (index 2). ORDER MATTERS for PlaylistManager</li>
+  <li><strong>Clean Build checkbox</strong> — ALWAYS tick "Clean Build" when you've added or renamed serialized fields (new fields cause layout mismatch error if cache is stale)</li>
+  <li><strong>Meta XR SDK namespace patch</strong> — if you get "duplicate class com.oculus.Integration", run <code>Tools → Patch Meta XR AAR Namespaces</code> (AARNamespacePatcher.cs in Assets/Editor/)</li>
+  <li><strong>Android permissions in AndroidManifest.xml</strong> — INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE. Flutter engine doesn't add all of these automatically in release</li>
+  <li><strong>OVRCameraRig TrackingOriginType = EyeLevel</strong> — check per scene before building</li>
+  <li><strong>GhostHandGuide prefab wired</strong> — GameManager → InactivityGuide → Ghost Hand slot not empty</li>
+  <li><strong>Install: adb install -r yourapp.apk</strong> OR use SideQuest. Enable "Developer mode" in Meta phone app first</li>
+</ul>
+
+<h4>Common build errors and fixes</h4>
+<table>
+  <tr><th>Error</th><th>Cause</th><th>Fix</th></tr>
+  <tr><td>"script class layout is incompatible"</td><td>You added serialized fields but incremental build cache has old layout</td><td>Tick "Clean Build" in Build Settings before building</td></tr>
+  <tr><td>"duplicate class com.oculus.Integration"</td><td>Two Meta packages both declare the same namespace in their AAR</td><td>Run Tools → Patch Meta XR AAR Namespaces OR change manifest.json from sdk.all to sdk.core</td></tr>
+  <tr><td>Quest shows black screen on launch</td><td>OVRCameraRig missing OR TrackingOriginType = Floor</td><td>Add OVRCameraRig, set TrackingOriginType = EyeLevel</td></tr>
+  <tr><td>UI buttons not clickable in VR</td><td>Missing OVRRaycaster or OVRInputModule</td><td>Replace GraphicRaycaster with OVRRaycaster on canvas; add OVRInputModule to EventSystem</td></tr>
+  <tr><td>WS not connecting on Quest</td><td>Phone hotspot used (AP isolation) OR Windows firewall blocking port 8765</td><td>Use Windows laptop hotspot; run netsh firewall rule</td></tr>
+  <tr><td>Particles invisible in VR</td><td>ParticleSystemRenderer has no material assigned</td><td>Create URP Particles/Unlit material, assign to renderer. This is not auto-assigned.</td></tr>
+</table>
+
+<!-- ═══ DEBUG CHECKLIST ════════════════════════════════════════ -->
+<h2 id="debug"><span class="icon">🔍</span> Debug Checklist</h2>
+
+<h4>Quest not connecting to Flutter (V1)</h4>
+<ul class="checklist">
+  <li>Quest and phone both on Windows laptop hotspot (Windows Settings → Mobile Hotspot)?</li>
+  <li>Flutter app on Game Session screen? (WS server only starts in initState)</li>
+  <li>Windows firewall rule added? <code>netsh advfirewall firewall add rule name="Quest WS" dir=in action=allow protocol=TCP localport=8765</code></li>
+  <li>Check logcat: <code>adb logcat -d --pid=$(adb shell pidof com.your.package) | findstr WSClient</code><br>Should see: <em>[WSClient] Searching for Flutter server on port 8766</em> then <em>[WSClient] Connected → ws://...</em></li>
+</ul>
+
+<h4>Ghost guide not appearing</h4>
+<ul class="checklist">
+  <li>InactivityGuide component on GameManager?</li>
+  <li>Ghost Hand slot filled (GhostHandGuide instance in scene)?</li>
+  <li>guidedModeEnabled = true in InactivityGuide Inspector?</li>
+  <li>OnSessionStart() being called at session begin?</li>
+  <li>OnNewTarget(transform) being called when target spawns?</li>
+  <li>GhostHandMaterial has Surface Type = Transparent?</li>
+</ul>
+
+<h4>Water not flowing (garden game)</h4>
+<ul class="checklist">
+  <li>WaterSpout ParticleSystemRenderer has WaterParticle.mat assigned?</li>
+  <li>SpillEffect ParticleSystemRenderer has SpillParticle.mat?</li>
+  <li>WaterController.waterParticles, rotationTracker, spillParticles all non-null in Inspector?</li>
+  <li>CanGrabNotifier on WateringCup? Grabbable component also present?</li>
+  <li>ForearmRotationTracker finding right OVRHand? (Check logs for "Right OVRHand not found")</li>
+</ul>
+
+<!-- ═══ CHANGELOG ════════════════════════════════════════════= -->
+<h2 id="changelog"><span class="icon">📝</span> Changelog</h2>
+<p style="font-size:13px;color:var(--text-muted)">Add an entry here whenever a significant change is made to the integration protocol, scripts, or scene requirements.</p>
+
+<div class="changelog-entry">
+  <span class="changelog-date">2026-06-21</span>
+  <div class="changelog-content">
+    <strong>Inactivity-triggered ghost guide added.</strong> <code>InactivityGuide.cs</code> + <code>GhostHandGuide.cs</code> + <code>GhostHandGuide.prefab</code>. <code>guidedMode</code> and <code>guideTimeoutSec</code> fields added to all prescription models. BalloonSpawner calls OnNewTarget() per spawn. GameManager calls NotifyCorrectPop() and session start/end hooks. <span class="badge badge-green">Done</span>
+  </div>
+</div>
+
+<div class="changelog-entry">
+  <span class="changelog-date">2026-06-20</span>
+  <div class="changelog-content">
+    <strong>Game_Garden bugs fixed.</strong> WaterParticle.mat + SpillParticle.mat created and assigned. RehabCanvas scale (0→0.002), position, rotation corrected. ScoreCanvas Z scale fixed. Side2_Pots/WateringCup decorative duplicate reverted to local Y=0. <span class="badge badge-green">Done</span>
+  </div>
+</div>
+
+<div class="changelog-entry">
+  <span class="changelog-date">2026-06-18</span>
+  <div class="changelog-content">
+    <strong>Game_Garden merged into balloon repo.</strong> All garden scripts, assets, and scene committed to aastheen-balloon (commit 26ce195). Bootstrap OVR input confirmed working. 3 scenes: Bootstrap (0), ballooon (1), Game_Garden (2). <span class="badge badge-green">Done</span>
+  </div>
+</div>
+
+<div class="changelog-entry">
+  <span class="changelog-date">2026-06-15</span>
+  <div class="changelog-content">
+    <strong>Bootstrap OVR interaction fixed.</strong> Root cause: missing OVRRaycaster on canvas + OVRInputModule on EventSystem. Fix: OVRComprehensiveInteractionRig added, GraphicRaycaster replaced with OVRRaycaster. <span class="badge badge-green">Done</span>
+  </div>
+</div>
+
+<div class="changelog-entry">
+  <span class="changelog-date">2026-06-15</span>
+  <div class="changelog-content">
+    <strong>Verse V2 backend live.</strong> Neon Postgres + Render deployment at aastheen.onrender.com. DEMO_MODE=false, real JWT auth. Flutter successfully talking to cloud. <span class="badge badge-green">Done</span>
+  </div>
+</div>
+
+<div class="changelog-entry">
+  <span class="changelog-date">2026-06-07</span>
+  <div class="changelog-content">
+    <strong>Balloon clinical upgrade.</strong> 12 clinical features: Sequence, Reaction, USN, Adaptive difficulty, Gaze tracking, Streak rewards, Pop effects. Flutter game session UI rebuilt with CBS/MPT sliders. APK 49.8 MB. <span class="badge badge-green">Done</span>
+  </div>
+</div>
+
+<div class="changelog-entry">
+  <span class="changelog-date">2026-06-02</span>
+  <div class="changelog-content">
+    <strong>Flutter↔Quest WS proved working end-to-end.</strong> UDP discovery on Windows hotspot. Firewall rule + Android CHANGE_WIFI_MULTICAST_STATE permission were the blockers. This is now the reference architecture. <span class="badge badge-green">Done</span>
+  </div>
+</div>
+
+<div class="changelog-entry" style="border-bottom:2px dashed var(--border); background:var(--surface); border-radius:8px; padding:14px 16px; margin-top:8px;">
+  <span class="changelog-date" style="color:var(--text-muted);font-style:italic">YYYY-MM-DD</span>
+  <div class="changelog-content" style="color:var(--text-muted);font-style:italic">
+    [ Add your entry here — what changed, which commit, which scene/script, status badge ]
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// Highlight active sidebar link based on scroll position
+const sections = document.querySelectorAll('h2[id], h3[id]');
+const links = document.querySelectorAll('.sidebar a');
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const active = document.querySelector(`.sidebar a[href="#${e.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { rootMargin: '-20% 0px -75% 0px' });
+sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

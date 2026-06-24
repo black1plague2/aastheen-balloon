@@ -44,6 +44,8 @@ public class PrescriptionPublic
     public string          patient_name;
     // Populated by VerseClient two-pass parse when game_id == "garden"
     [System.NonSerialized] public GardenSettings gardenTargets;
+    // Populated by VerseClient two-pass parse when game_id == "pose"
+    [System.NonSerialized] public PoseSettings poseTargets;
     // Populated by VerseClient two-pass parse when game_id == "multi"
     [System.NonSerialized] public MultiGameEntry[] multiGames;
 }
@@ -194,6 +196,38 @@ public class GardenVerifyCodeResponse
     public string                 session_token;
     public string                 status;
     public GardenPrescriptionPublic prescription;
+}
+
+// ── Pose game settings (targets dict for game_id = "pose") ───────────────────
+
+[Serializable]
+public class PoseSettings
+{
+    public float sessionDuration  = 120f;  // seconds
+    public float holdDurationSec  = 3f;    // seconds pose must be held to count
+    public int   repTarget        = 10;    // target reps for the session
+}
+
+// ── Pose session metrics (outbound) ──────────────────────────────────────────
+
+[Serializable]
+public class PoseGameMetrics
+{
+    public int   total_reps;
+    public float session_duration;
+    public int   thumbsup_count;
+    public int   yo_count;
+    public int   nice_count;
+    public int   four_fingers_count;
+    public int   bunny_count;
+    public float hold_duration_sec;
+}
+
+[Serializable]
+public class PoseSessionResultsPayload
+{
+    public PoseGameMetrics game_metrics;
+    public string          network_mode = "home";
 }
 
 // Two-pass types: used by VerseClient when game_id == "multi"

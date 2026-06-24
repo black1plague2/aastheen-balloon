@@ -16,10 +16,11 @@ public class PlaylistManager : MonoBehaviour
     public string         PatientName { get; private set; }
     public bool           HasSession  => SessionId > 0 && !string.IsNullOrEmpty(SessionToken);
 
-    // ── Single-game (game_id == "balloon" | "garden") ─────────────────────────
-    public string         GameId   { get; private set; }
-    public BalloonSettings Settings { get; private set; }
+    // ── Single-game (game_id == "balloon" | "garden" | "pose") ──────────────────
+    public string         GameId        { get; private set; }
+    public BalloonSettings Settings     { get; private set; }
     public GardenSettings  GardenSettings { get; private set; }
+    public PoseSettings    PoseSettings  { get; private set; }
 
     // ── Multi-game playlist ───────────────────────────────────────────────────
     private readonly Queue<MultiGameEntry> _queue = new Queue<MultiGameEntry>();
@@ -53,11 +54,19 @@ public class PlaylistManager : MonoBehaviour
         {
             GardenSettings = response.prescription?.gardenTargets ?? new GardenSettings();
             Settings       = null;
+            PoseSettings   = null;
+        }
+        else if (GameId == "pose")
+        {
+            PoseSettings   = response.prescription?.poseTargets ?? new PoseSettings();
+            Settings       = null;
+            GardenSettings = null;
         }
         else
         {
             Settings       = response.prescription?.targets ?? new BalloonSettings();
             GardenSettings = null;
+            PoseSettings   = null;
         }
     }
 
@@ -90,10 +99,11 @@ public class PlaylistManager : MonoBehaviour
     {
         SessionId    = 0;
         SessionToken = null;
-        GameId       = null;
-        PatientName  = null;
-        Settings     = null;
+        GameId         = null;
+        PatientName    = null;
+        Settings       = null;
         GardenSettings = null;
+        PoseSettings   = null;
         _queue.Clear();
     }
 
@@ -103,6 +113,7 @@ public class PlaylistManager : MonoBehaviour
     {
         "balloon"   => "ballooon",        // scene file is Assets/Scenes/ballooon.unity
         "garden"    => "Game_Garden",
+        "pose"      => "Game_Pose",
         "bowarrow"  => "Game_BowArrow",
         "bow_arrow" => "Game_BowArrow",
         "armcurl"   => "Game_ArmCurl",

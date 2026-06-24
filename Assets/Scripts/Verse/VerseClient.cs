@@ -158,6 +158,16 @@ public class VerseClient : MonoBehaviour
             _ => onDone?.Invoke(), onError));
     }
 
+    public void PostPoseSessionResults(int sessionId, string sessionToken,
+        PoseSessionResultsPayload payload)
+    {
+        StartCoroutine(Post<object>(
+            $"{BaseUrl}/sessions/{sessionId}/results",
+            payload, sessionToken,
+            _ => Debug.Log("[VerseClient] Pose results posted"),
+            err => Debug.LogError($"[VerseClient] Pose results failed: {err}")));
+    }
+
     // ── Generic POST ─────────────────────────────────────────────────────────
 
     private IEnumerator Post<T>(string url, object body, string bearerToken,
