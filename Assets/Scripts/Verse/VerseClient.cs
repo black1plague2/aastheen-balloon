@@ -12,7 +12,7 @@ public class VerseClient : MonoBehaviour
 
     [Header("Backend")]
     [Tooltip("Default URL baked into the build. Overridden at runtime by PlayerPrefs.")]
-    public string BaseUrl = "https://aastheen.onrender.com";
+    public string BaseUrl = "https://baldmann-aegis-01.tailb6a5b1.ts.net:8443";
 
     private const string PrefKey = "verse_backend_url";
 
