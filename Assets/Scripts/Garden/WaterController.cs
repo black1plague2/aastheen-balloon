@@ -20,7 +20,7 @@ public class WaterController : MonoBehaviour
     {
         if (rotationTracker == null)
             rotationTracker =
-                FindFirstObjectByType<ForearmRotationTracker>();
+                FindAnyObjectByType<ForearmRotationTracker>();
 
         // Stop both particles at start
         if (waterParticles != null) waterParticles.Stop();

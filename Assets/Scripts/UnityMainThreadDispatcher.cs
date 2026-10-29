@@ -26,7 +26,7 @@ public class UnityMainThreadDispatcher : MonoBehaviour
 
             if (_instance == null)
             {
-                _instance = FindObjectOfType<UnityMainThreadDispatcher>();
+                _instance = FindAnyObjectByType<UnityMainThreadDispatcher>();
                 if (_instance == null)
                 {
                     var go = new GameObject("UnityMainThreadDispatcher");

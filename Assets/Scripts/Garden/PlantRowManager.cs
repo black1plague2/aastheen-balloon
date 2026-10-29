@@ -17,11 +17,11 @@ public class PlantRowManager : MonoBehaviour
     {
         if (rotationTracker == null)
             rotationTracker =
-                FindFirstObjectByType<ForearmRotationTracker>();
+                FindAnyObjectByType<ForearmRotationTracker>();
 
         if (waterController == null)
             waterController =
-                FindFirstObjectByType<WaterController>();
+                FindAnyObjectByType<WaterController>();
     }
 
     void Update()

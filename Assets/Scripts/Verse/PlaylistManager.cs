@@ -21,6 +21,7 @@ public class PlaylistManager : MonoBehaviour
     public BalloonSettings Settings     { get; private set; }
     public GardenSettings  GardenSettings { get; private set; }
     public PoseSettings    PoseSettings  { get; private set; }
+    public PaintWallSettings PaintWallSettings { get; private set; }
 
     // ── Multi-game playlist ───────────────────────────────────────────────────
     private readonly Queue<MultiGameEntry> _queue = new Queue<MultiGameEntry>();
@@ -61,12 +62,21 @@ public class PlaylistManager : MonoBehaviour
             PoseSettings   = response.prescription?.poseTargets ?? new PoseSettings();
             Settings       = null;
             GardenSettings = null;
+            PaintWallSettings = null;
+        }
+        else if (GameId == "paintwall")
+        {
+            PaintWallSettings = response.prescription?.paintWallTargets ?? new PaintWallSettings();
+            Settings       = null;
+            GardenSettings = null;
+            PoseSettings   = null;
         }
         else
         {
             Settings       = response.prescription?.targets ?? new BalloonSettings();
             GardenSettings = null;
             PoseSettings   = null;
+            PaintWallSettings = null;
         }
     }
 
@@ -83,13 +93,21 @@ public class PlaylistManager : MonoBehaviour
 
         if (entry.id == "balloon")
         {
-            Settings       = entry.ToBalloonSettings();
-            GardenSettings = null;
+            Settings          = entry.ToBalloonSettings();
+            GardenSettings    = null;
+            PaintWallSettings = null;
         }
         else if (entry.id == "garden")
         {
-            GardenSettings = entry.ToGardenSettings();
-            Settings       = null;
+            GardenSettings    = entry.ToGardenSettings();
+            Settings          = null;
+            PaintWallSettings = null;
+        }
+        else if (entry.id == "paintwall")
+        {
+            PaintWallSettings = entry.ToPaintWallSettings();
+            Settings          = null;
+            GardenSettings    = null;
         }
 
         return GameIdToSceneName(entry.id);
@@ -104,6 +122,7 @@ public class PlaylistManager : MonoBehaviour
         Settings       = null;
         GardenSettings = null;
         PoseSettings   = null;
+        PaintWallSettings = null;
         _queue.Clear();
     }
 
@@ -118,6 +137,8 @@ public class PlaylistManager : MonoBehaviour
         "bow_arrow" => "Game_BowArrow",
         "armcurl"   => "Game_ArmCurl",
         "arm_curl"  => "Game_ArmCurl",
+        "paintwall" => "paint",           // scene file is Assets/Scenes/paint.unity
+        "paint_wall" => "paint",
         _           => "ballooon",
     };
 }

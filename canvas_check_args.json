@@ -1,0 +1,4 @@
+{
+  "isMethodBody": true,
+  "csharpCode": "var names = new string[]{\"DebugCanvas\",\"RehabCanvas\",\"ScoreCanvas\",\"WateringCup\",\"GameManager\"};\nforeach(var n in names){\n    var go = GameObject.Find(n);\n    if(go==null){Debug.Log(n+\": NOT FOUND\");continue;}\n    var t = go.transform;\n    Debug.Log(n+\" pos=\"+t.position+\" rot=\"+t.eulerAngles+\" scale=\"+t.localScale+\" active=\"+go.activeSelf);\n}\nvar wc = GameObject.Find(\"WateringCup/WateringCup\");\nif(wc!=null)Debug.Log(\"WateringCup/WateringCup pos=\"+wc.transform.position+\" rot=\"+wc.transform.eulerAngles);\nvar ws = GameObject.Find(\"WaterSpout\");\nif(ws!=null)Debug.Log(\"WaterSpout world pos=\"+ws.transform.position);\nvar se = GameObject.Find(\"SpillEffect\");\nif(se!=null)Debug.Log(\"SpillEffect world pos=\"+se.transform.position);"
+}

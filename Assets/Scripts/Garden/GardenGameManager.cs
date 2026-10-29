@@ -42,6 +42,7 @@ public class GardenGameManager : MonoBehaviour
                 _ptm.memoryModeEnabled        = s.memoryMode;
                 _ptm.showSessionOverviewFirst = s.showOverviewFirst;
                 _ptm.instructionDisplayTime   = s.instructionDisplayTime;
+                _ptm.sessionDuration          = s.sessionDuration;
             }
         }
         // PTM.Start() fires next (order 0) and calls StartSession() with these values.

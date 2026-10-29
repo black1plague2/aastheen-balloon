@@ -47,14 +47,14 @@ public class BootstrapManager : MonoBehaviour
     {
         bool hasInteractionRig = HasInteractionSdkRig();
         var pointableCanvasType = System.Type.GetType("Oculus.Interaction.PointableCanvas, Oculus.Interaction");
-        bool hasPointableCanvasModule = FindFirstObjectByType<UnityEngine.EventSystems.BaseInputModule>()
+        bool hasPointableCanvasModule = FindAnyObjectByType<UnityEngine.EventSystems.BaseInputModule>()
             ?.GetType().FullName == "Oculus.Interaction.PointableCanvasModule";
 
         if (!hasInteractionRig && hasPointableCanvasModule)
         {
             // OVRCameraRig-only scene: PointableCanvasModule has no interactors to drive it.
             // Fall back to OVRInputModule which works with basic controller ray from OVRCameraRig.
-            var pcm  = FindFirstObjectByType<UnityEngine.EventSystems.BaseInputModule>();
+            var pcm  = FindAnyObjectByType<UnityEngine.EventSystems.BaseInputModule>();
             var esGO = pcm.gameObject;
             Destroy(pcm);
             if (esGO.GetComponent<OVRInputModule>() == null)
@@ -63,7 +63,7 @@ public class BootstrapManager : MonoBehaviour
             Debug.Log("[Bootstrap] Swapped PointableCanvasModule → OVRInputModule (no Interaction SDK rig)");
         }
 
-        foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+        foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
             var ovrRaycaster    = canvas.GetComponent<OVRRaycaster>();
             var pointableCanvas = pointableCanvasType != null
@@ -107,7 +107,7 @@ public class BootstrapManager : MonoBehaviour
         }
 
         // Strip OVRInputModule only if PointableCanvasModule is legitimately driving
-        var ovrInput = FindFirstObjectByType<OVRInputModule>();
+        var ovrInput = FindAnyObjectByType<OVRInputModule>();
         if (ovrInput != null && hasPointableCanvasModule)
         {
             Debug.Log("[Bootstrap] Removing OVRInputModule (PointableCanvasModule is active)");
@@ -125,7 +125,7 @@ public class BootstrapManager : MonoBehaviour
             if (anchor != null) cam = anchor.GetComponent<Camera>();
         }
         if (cam == null) return;
-        foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+        foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
             if (canvas.renderMode == RenderMode.WorldSpace && canvas.worldCamera == null)
                 canvas.worldCamera = cam;
@@ -150,7 +150,7 @@ public class BootstrapManager : MonoBehaviour
     private void FixInputModuleRayTransform()
     {
         // Only runs if OVRInputModule survived (i.e. no PointableCanvasModule present).
-        var inputModule = FindFirstObjectByType<OVRInputModule>();
+        var inputModule = FindAnyObjectByType<OVRInputModule>();
         if (inputModule == null) return;
 
         inputModule.joyPadClickButton = OVRInput.Button.PrimaryIndexTrigger;

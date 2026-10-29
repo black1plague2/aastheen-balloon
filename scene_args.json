@@ -1,0 +1,7 @@
+{
+  "openedSceneName": "Game_Garden",
+  "includeRootGameObjects": true,
+  "includeChildrenDepth": 4,
+  "includeBounds": false,
+  "includeData": false
+}

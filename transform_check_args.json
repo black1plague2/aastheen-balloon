@@ -1,0 +1,4 @@
+{
+  "isMethodBody": true,
+  "csharpCode": "// Check full transform chain for WateringCup\nvar root = GameObject.Find(\"WateringCup\");\nif(root!=null){\n    Debug.Log(\"ROOT WateringCup: localPos=\"+root.transform.localPosition+\" localRot=\"+root.transform.localEulerAngles+\" localScale=\"+root.transform.localScale+\" worldPos=\"+root.transform.position);\n    foreach(Transform child in root.transform){\n        Debug.Log(\"  CHILD \"+child.name+\": localPos=\"+child.localPosition+\" localScale=\"+child.localScale+\" worldPos=\"+child.position);\n        foreach(Transform gc in child){\n            Debug.Log(\"    GC \"+gc.name+\": localPos=\"+gc.localPosition+\" worldPos=\"+gc.position);\n        }\n    }\n}\n// Also check Side2_Pots position\nvar s2 = GameObject.Find(\"Side2_Pots\");\nif(s2!=null) Debug.Log(\"Side2_Pots worldPos=\"+s2.transform.position+\" scale=\"+s2.transform.localScale);"
+}

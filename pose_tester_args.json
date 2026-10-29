@@ -1,0 +1,4 @@
+{
+  "filePath": "Assets/Scripts/PoseColorTester.cs",
+  "content": "using UnityEngine;\nusing Oculus.Interaction;\n\npublic class PoseColorTester : MonoBehaviour\n{\n    public GameObject poseDetector;\n\n    private IActiveState _activeState;\n    private Renderer _renderer;\n    private bool _lastState;\n\n    void Start()\n    {\n        _renderer = GetComponent<Renderer>();\n        if (poseDetector != null)\n            _activeState = poseDetector.GetComponent<ActiveStateGroup>();\n        SetColor(false);\n    }\n\n    void Update()\n    {\n        if (_activeState == null) return;\n        bool active = _activeState.Active;\n        if (active != _lastState)\n        {\n            _lastState = active;\n            SetColor(active);\n        }\n    }\n\n    void SetColor(bool detected)\n    {\n        if (_renderer != null)\n            _renderer.material.color = detected ? Color.green : Color.red;\n    }\n}\n"
+}

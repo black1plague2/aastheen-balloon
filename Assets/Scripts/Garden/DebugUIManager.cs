@@ -23,7 +23,7 @@ public class DebugUIManager : MonoBehaviour
     {
         if (rotationTracker == null)
             rotationTracker =
-                FindFirstObjectByType<ForearmRotationTracker>();
+                FindAnyObjectByType<ForearmRotationTracker>();
 
         if (rotationTracker == null)
             Debug.LogError("ForearmRotationTracker not found!");

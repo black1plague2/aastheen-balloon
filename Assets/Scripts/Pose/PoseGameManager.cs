@@ -16,7 +16,7 @@ public class PoseGameManager : MonoBehaviour
         _settings = PlaylistManager.Instance?.PoseSettings ?? new PoseSettings();
 
         // Auto-find all PoseLoggers in the scene — no manual wiring needed
-        _loggers = FindObjectsOfType<PoseLogger>();
+        _loggers = FindObjectsByType<PoseLogger>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         foreach (var pl in _loggers)
         {
             pl.holdDuration   = _settings.holdDurationSec;

@@ -20,7 +20,7 @@ public class Balloon : MonoBehaviour
         balloonRenderer = GetComponentInChildren<Renderer>();
 
         if (_skeletons == null || _skeletons.Length == 0)
-            _skeletons = FindObjectsOfType<OVRSkeleton>();
+            _skeletons = FindObjectsByType<OVRSkeleton>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
 
         if (balloonRenderer != null)
         {

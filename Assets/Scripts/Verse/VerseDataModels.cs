@@ -46,6 +46,8 @@ public class PrescriptionPublic
     [System.NonSerialized] public GardenSettings gardenTargets;
     // Populated by VerseClient two-pass parse when game_id == "pose"
     [System.NonSerialized] public PoseSettings poseTargets;
+    // Populated by VerseClient two-pass parse when game_id == "paintwall"
+    [System.NonSerialized] public PaintWallSettings paintWallTargets;
     // Populated by VerseClient two-pass parse when game_id == "multi"
     [System.NonSerialized] public MultiGameEntry[] multiGames;
 }
@@ -150,6 +152,14 @@ public class MultiGameEntry
     public float  instructionDisplayTime = 4f;
     public float  gardenDuration         = 180f;
 
+    // Paint the Wall fields (distinct duration name to avoid field clash)
+    public float  wallHeight         = 2.4f;
+    public string paintingPattern    = "horizontal"; // "horizontal" | "vertical" | "circular" | "zigzag"
+    public float  paintingAreaWidth  = 2.6f;
+    public float  paintingAreaHeight = 2.0f;
+    public string toolType           = "brush";      // "brush" | "roller"
+    public float  paintWallDuration  = 180f;
+
     public BalloonSettings ToBalloonSettings() => new BalloonSettings
     {
         targetRotation  = targetRotation,
@@ -169,6 +179,16 @@ public class MultiGameEntry
         showOverviewFirst      = showOverviewFirst,
         instructionDisplayTime = instructionDisplayTime,
         sessionDuration        = gardenDuration,
+    };
+
+    public PaintWallSettings ToPaintWallSettings() => new PaintWallSettings
+    {
+        wallHeight         = wallHeight,
+        paintingPattern    = paintingPattern,
+        paintingAreaWidth  = paintingAreaWidth,
+        paintingAreaHeight = paintingAreaHeight,
+        toolType        = toolType,
+        sessionDuration = paintWallDuration,
     };
 }
 
@@ -248,4 +268,58 @@ public class MultiVerifyCodeResponse
     public string                 session_token;
     public string                 status;
     public MultiPrescriptionPublic prescription;
+}
+
+// ── Paint the Wall settings (targets dict for game_id = "paintwall") ──────────
+
+[Serializable]
+public class PaintWallSettings
+{
+    public float  wallHeight         = 2.4f;
+    public string paintingPattern    = "horizontal"; // "horizontal" | "vertical" | "circular" | "zigzag"
+    public float  paintingAreaWidth  = 2.6f;
+    public float  paintingAreaHeight = 2.0f;
+    public string toolType           = "brush";      // "brush" | "roller"
+    public float  sessionDuration    = 180f;
+}
+
+// ── Paint the Wall session metrics (outbound) ─────────────────────────────────
+
+[Serializable]
+public class PaintWallGameMetrics
+{
+    public float    coverage_percent;
+    public int      strokes_completed;
+    public int      mistakes;
+    public float    session_duration;
+    public string   tool_used;
+    public string   painting_pattern;
+    public string[] exercise_tags; // e.g. "Shoulder Flexion", "Shoulder Endurance"
+}
+
+[Serializable]
+public class PaintWallSessionResultsPayload
+{
+    public PaintWallGameMetrics game_metrics;
+    public string               network_mode = "home";
+}
+
+// Two-pass types: used by VerseClient when game_id == "paintwall"
+[Serializable]
+public class PaintWallPrescriptionPublic
+{
+    public int               id;
+    public string            game_id;
+    public string            game_name;
+    public string            patient_name;
+    public PaintWallSettings targets;
+}
+
+[Serializable]
+public class PaintWallVerifyCodeResponse
+{
+    public int                       session_id;
+    public string                    session_token;
+    public string                    status;
+    public PaintWallPrescriptionPublic prescription;
 }

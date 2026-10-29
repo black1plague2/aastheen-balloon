@@ -30,10 +30,10 @@ public class ForearmRotationTracker : MonoBehaviour
 
     void Start()
     {
-        grabNotifier = FindFirstObjectByType<CanGrabNotifier>();
+        grabNotifier = FindAnyObjectByType<CanGrabNotifier>();
 
         // Find right hand by name
-        OVRHand[] hands = FindObjectsByType<OVRHand>(FindObjectsSortMode.None);
+        OVRHand[] hands = FindObjectsByType<OVRHand>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
         foreach (OVRHand h in hands)
         {
             if (h.name.ToLower().Contains("right"))

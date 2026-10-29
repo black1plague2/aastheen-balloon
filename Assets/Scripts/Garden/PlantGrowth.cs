@@ -25,9 +25,9 @@ public class PlantGrowth : MonoBehaviour
         targetScale = originalScale;
 
         rotationTracker =
-            FindFirstObjectByType<ForearmRotationTracker>();
+            FindAnyObjectByType<ForearmRotationTracker>();
         waterController =
-            FindFirstObjectByType<WaterController>();
+            FindAnyObjectByType<WaterController>();
     }
 
     void Update()

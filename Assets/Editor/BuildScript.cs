@@ -12,6 +12,7 @@ public static class BuildScript
         "Assets/Scenes/ballooon.unity",    // index 1 — balloon game
         "Assets/Scenes/Game_Garden.unity", // index 2 — garden game
         "Assets/Scenes/Game_Pose.unity",   // index 3 — gesture pose game
+        "Assets/Scenes/paint.unity",       // index 4 — paint the wall game
     };
 
     public static void BuildAndroid()

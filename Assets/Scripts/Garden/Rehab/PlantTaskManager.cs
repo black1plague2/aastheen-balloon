@@ -26,6 +26,7 @@ public class PlantTaskManager : MonoBehaviour
     public int tasksPerSession    = 2;
     public int maxTasksPerSession = 5;
     public int sessionsToLevelUp  = 2;
+    public float sessionDuration  = 180f;
 
     // ── Memory Mode ───────────────────────────────────────────────────────
     [Header("Memory Mode")]
@@ -65,6 +66,7 @@ public class PlantTaskManager : MonoBehaviour
     private PlantInteractable toolAtPlant     = null;
     private bool            sessionActive     = false;
     private int             consecutiveCorrect = 0;
+    private float           sessionStartTime  = 0f;
 
     // Hold timer
     private float holdTimer     = 0f;
@@ -87,6 +89,8 @@ public class PlantTaskManager : MonoBehaviour
     {
         if (!sessionActive) return;
         HandleHoldTimer();
+        if (Time.time - sessionStartTime >= sessionDuration)
+            OnSessionTimeout();
     }
 
     // ── Session control ───────────────────────────────────────────────────
@@ -94,6 +98,7 @@ public class PlantTaskManager : MonoBehaviour
     public void StartSession()
     {
         sessionActive    = false;
+        sessionStartTime = Time.time;
         currentTaskIndex = 0;
         holdTimer        = 0f;
         holdActive       = false;
@@ -324,16 +329,36 @@ public class PlantTaskManager : MonoBehaviour
 
     // ── Session complete ──────────────────────────────────────────────────
 
-    void OnSessionComplete()
+    void OnSessionComplete() => FinishSession(allTasksDone: true);
+
+    // Prescribed session duration elapsed before the patient finished every task —
+    // still end the session so the therapist-set timer is honored, but don't
+    // treat it as a successful clear for difficulty progression.
+    void OnSessionTimeout()
+    {
+        if (!sessionActive) return;
+        Debug.Log($"[PlantTaskManager] Session duration ({sessionDuration}s) reached — " +
+                  $"ending with {GetRemainingTasks()} task(s) remaining.");
+        FinishSession(allTasksDone: false);
+    }
+
+    void FinishSession(bool allTasksDone)
     {
         sessionActive = false;
-        consecutiveCorrect++;
 
-        if (consecutiveCorrect >= sessionsToLevelUp)
+        if (allTasksDone)
+        {
+            consecutiveCorrect++;
+            if (consecutiveCorrect >= sessionsToLevelUp)
+            {
+                consecutiveCorrect = 0;
+                tasksPerSession = Mathf.Min(tasksPerSession + 1, maxTasksPerSession);
+                Debug.Log($"[PlantTaskManager] Difficulty up! Tasks: {tasksPerSession}");
+            }
+        }
+        else
         {
             consecutiveCorrect = 0;
-            tasksPerSession = Mathf.Min(tasksPerSession + 1, maxTasksPerSession);
-            Debug.Log($"[PlantTaskManager] Difficulty up! Tasks: {tasksPerSession}");
         }
 
         progressManager?.OnSessionComplete(sessionTasks);

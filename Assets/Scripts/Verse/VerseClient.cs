@@ -11,8 +11,10 @@ public class VerseClient : MonoBehaviour
     public static VerseClient Instance { get; private set; }
 
     [Header("Backend")]
+    // VPS (previous): https://baldmann-aegis-01.tailb6a5b1.ts.net:8443 — to revert, swap this
+    // back and rebuild (or just re-enter it via the Bootstrap settings panel on-headset).
     [Tooltip("Default URL baked into the build. Overridden at runtime by PlayerPrefs.")]
-    public string BaseUrl = "https://baldmann-aegis-01.tailb6a5b1.ts.net:8443";
+    public string BaseUrl = "https://aastheen.onrender.com";
 
     private const string PrefKey = "verse_backend_url";
 
@@ -22,9 +24,11 @@ public class VerseClient : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        // Runtime override wins over the baked-in default.
+        // Runtime override (set via Bootstrap settings panel) always wins over the baked-in default.
         if (PlayerPrefs.HasKey(PrefKey))
-            BaseUrl = PlayerPrefs.GetString(PrefKey);
+        {
+            BaseUrl = PlayerPrefs.GetString(PrefKey).TrimEnd('/');
+        }
     }
 
     /// <summary>Persists the URL so it survives app restarts.</summary>
@@ -99,6 +103,26 @@ public class VerseClient : MonoBehaviour
                 };
                 onSuccess?.Invoke(response);
             }
+            else if (gameId == "paintwall")
+            {
+                // Two-pass: re-parse targets as PaintWallSettings.
+                var pr = JsonUtility.FromJson<PaintWallVerifyCodeResponse>(raw);
+                var response = new VerifyCodeResponse
+                {
+                    session_id    = pr.session_id,
+                    session_token = pr.session_token,
+                    status        = pr.status,
+                    prescription  = new PrescriptionPublic
+                    {
+                        id               = pr.prescription.id,
+                        game_id          = "paintwall",
+                        game_name        = pr.prescription.game_name,
+                        patient_name     = pr.prescription.patient_name,
+                        paintWallTargets = pr.prescription.targets,
+                    }
+                };
+                onSuccess?.Invoke(response);
+            }
             else if (gameId == "multi")
             {
                 // Two-pass: re-parse with MultiGameTargets-aware struct.
@@ -153,6 +177,18 @@ public class VerseClient : MonoBehaviour
     {
         var body = new GardenSessionResultsPayload { game_metrics = metrics };
         StartCoroutine(Post<GardenSessionResultsPayload>(
+            $"{BaseUrl}/sessions/{sessionId}/results",
+            body, sessionToken,
+            _ => onDone?.Invoke(), onError));
+    }
+
+    public void SubmitPaintWallResults(int sessionId, string sessionToken,
+        PaintWallGameMetrics metrics,
+        Action               onDone,
+        Action<string>       onError)
+    {
+        var body = new PaintWallSessionResultsPayload { game_metrics = metrics };
+        StartCoroutine(Post<PaintWallSessionResultsPayload>(
             $"{BaseUrl}/sessions/{sessionId}/results",
             body, sessionToken,
             _ => onDone?.Invoke(), onError));
